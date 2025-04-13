@@ -1,0 +1,31 @@
+{
+    "frames": [
+        {
+            "GLOB_01.png": {
+                "frame": {"x":0, "y":0, "w":64, "h":32},
+                "spriteSourceSize": {"x":0,"y":0,"w":64,"h":32},
+                "sourceSize": {"w":64,"h":32}
+            },
+            "GLOB_02.png": {
+                "frame": {"x":0, "y":0, "w":64, "h":32},
+                "spriteSourceSize": {"x":0,"y":0,"w":64,"h":32},
+                "sourceSize": {"w":64,"h":32}
+            },
+            "GLOB_03.png": {
+                "frame": {"x":0, "y":0, "w":64, "h":32},
+                "spriteSourceSize": {"x":0,"y":0,"w":64,"h":32},
+                "sourceSize": {"w":64,"h":32}
+            },
+            "GLOB_04.png": {
+                "frame": {"x":0, "y":0, "w":64, "h":32},
+                "spriteSourceSize": {"x":0,"y":0,"w":64,"h":32},
+                "sourceSize": {"w":64,"h":32}
+            }
+        }
+    ],
+    "meta": {
+        "image": "GLOB_01.png",
+        "size": {"w": 64, "h": 32},
+        "scale": "1"
+    }
+}

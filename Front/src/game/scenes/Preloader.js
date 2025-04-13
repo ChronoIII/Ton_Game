@@ -30,10 +30,23 @@ export class Preloader extends Scene
     preload ()
     {
         //  Load the assets for the game - Replace with your own assets
-        this.load.setPath('assets');
+        this.load.setPath('assets')
 
         // this.load.image('logo', 'logo.png');
-        this.load.image('star', 'star.png');
+        this.load.image('star', 'star.png')
+        this.load.spritesheet('basic_turret', 'basic_turret/GLOB.png', {
+            frameWidth: 64,
+            frameHeight: 64,
+        })
+        this.load.spritesheet('hopp', 'enemies/hopp/HOPP.png', {
+            frameWidth: 48,
+            frameHeight: 48,
+        })
+        this.load.spritesheet('destroy_particles', 'particles/destroyed/TFOG.png', {
+            frameWidth: 52,
+            frameHeight: 52,
+        })
+        this.load.image('basic_bullet', 'bullets/BALLA0.png')
     }
 
     create ()
@@ -42,6 +55,6 @@ export class Preloader extends Scene
         //  For example, you can define global animations here, so we can use them in other scenes.
 
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
-        this.scene.start('Game');
+        this.scene.start('Game')
     }
 }
