@@ -47,6 +47,7 @@ export class Preloader extends Scene
             frameHeight: 52,
         })
         this.load.image('basic_bullet', 'bullets/BALLA0.png')
+        this.load.image('shield_barrier', 'barrier/spr_shield.png')
     }
 
     create ()

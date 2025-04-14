@@ -1,17 +1,17 @@
 import { Scene, Input } from 'phaser';
+import Enemy from '../actors/Enemy';
 
 export class Game extends Scene
 {
     #pointer = null
     #wasd = null
-    #player = null
 
-    #mouseX = null
-    #mouseY = null
-    #moveSpeed = 300
-
+    #playerMoveSpeed = 300
+    #enemyMoveSpeed = 120
     #timer = 0
 
+    #player = null
+    #barrier = null
     #bullets = []
 
     constructor ()
@@ -63,18 +63,40 @@ export class Game extends Scene
 
         this.#player = this.physics.add.sprite(width / 2, height + 32, 'basic_turret')
             .setOrigin(0.5, 1.5)
+        this.#barrier = this.physics.add.sprite(width / 2, height, 'shield_barrier')
+            .setScale(0.3)
+        this.tweens.add({
+            targets: [this.#barrier],
+            scale: 0.28,
+            ease: 'Linear',
+            duration: 1000,
+            repeat: -1,
+            yoyo: true,
+        })
 
         this.#mouseInputEvents()
     }
 
     update (time, delta) {
+        let height = this.cameras.main.height
+        let width = this.cameras.main.width
+
         // this.#playerMovement()
 
         this.#timer += delta
 
-        while (this.#timer > 2500) {
-            this.#enemySpawner()
+        while (this.#timer > 3000) {
+            let spawnCount = Math.floor((Math.random() * 2) + 1)
+            for (let i = 1; i <= spawnCount; i++) {
+                this.#enemySpawner()
+            } 
             this.#timer = 0
+        }
+
+        // Reset recoil knockback (player)
+        if (this.#player.y < height + 32) {
+            this.#player.body.velocity.y = 0
+            this.#player.y = height + 32
         }
     }
 
@@ -90,19 +112,20 @@ export class Game extends Scene
             let opposite = playerY - pointerY
             let hypotenuse = Math.sqrt(Math.pow(adjacent, 2) + Math.pow(opposite, 2))
 
+            // Pythagoream
             // https://stackoverflow.com/questions/9705123/how-can-i-get-sin-cos-and-tan-to-use-degrees-instead-of-radians
             let radian = Math.acos(adjacent / hypotenuse)
             // let degree = radian * (180 / Math.PI)
 
+            // Animation and rotation
             this.#player.anims.play('fire', true)
             this.#player.rotation = radian - Phaser.Math.DegToRad(90)
-            // this.#player.velocity = (radian, 1500)
-            // this.#player.setPosition(this.#player.x, this.#player.y + 5)
-            //     .setVelocity(new Phaser.Math.Vector2(1, 1)
-            //     .setLength(100)
-            //     .setPosition(this.#player.x, this.#player.y - 5)
-            // )
 
+            // Knockback when fire
+            this.#player.setPosition(this.#player.x, this.#player.y + 8)
+            this.physics.moveTo(this.#player, this.#player.x, this.#player.y - 8, 100)
+
+            // Bullet instantiate
             this.#bulletFire(this.#player.x, this.#player.y - 32, radian)
         })
     }
@@ -121,61 +144,75 @@ export class Game extends Scene
 
     #playerMovement () {
         if (this.#wasd.left.isDown) {
-            this.#player.body.velocity.x = -1 * this.#moveSpeed
+            this.#player.body.velocity.x = -1 * this.#playerMoveSpeed
         } else if (this.#wasd.right.isDown) {
-            this.#player.body.velocity.x = 1 * this.#moveSpeed
+            this.#player.body.velocity.x = 1 * this.#playerMoveSpeed
         } else {
             this.#player.body.velocity.x = 0
         }
 
         if (this.#wasd.up.isDown) {
-            this.#player.body.velocity.y = -1 * this.#moveSpeed
+            this.#player.body.velocity.y = -1 * this.#playerMoveSpeed
         } else if (this.#wasd.down.isDown) {
-            this.#player.body.velocity.y = 1 * this.#moveSpeed
-        } else {
+            this.#player.body.velocity.y = 1 * this.#playerMoveSpeed
+        } else { nhm 
             this.#player.body.velocity.y = 0
         }
     }
 
     #enemySpawner () {
         let velocity = new Phaser.Math.Vector2(1, 1)
-                .setLength(150)
+                .setLength(this.#enemyMoveSpeed)
 
         let hopp = this.physics.add.sprite(Math.random() * (0, this.cameras.main.width), 0, 'hopp')
             .setVelocity(0, velocity.y)
             .setScale(0.8)
-            .setData('health', 2)
+            .setData('health', 3)
         
         hopp.anims.play('hopp_walk', true)
 
-        this.physics.add.overlap(hopp, this.#bullets, (x, y) => {
-            console.log('hit')
+        this.tweens.add({
+            targets: [hopp],
+            scale: 0.9,
+            ease: 'Linear',
+            duration: 1000,
+            repeat: -1,
+            yoyo: true,
+        })
 
-            y.destroy()
+        this.physics.add.overlap(hopp, this.#bullets, (enemy, bullet) => {
+            bullet.destroy()
 
             this.tweens.add({
-                targets: x,
+                targets: enemy,
                 alpha: 0.1,
-                // ease: 'Cubic.easeOut',
+                y: {
+                    from: enemy.y,
+                    to: enemy.y - 10
+                },
                 duration: 100,
                 repeat: 0,
-                yoyo: true
+                yoyo: true,
+                onComplete: () => {
+                    enemy.y = enemy.y - 10
+                    enemy.setAlpha(1)
+                }
             })
 
-            x.setData('health', x.getData('health') - 1)
+            enemy.setData('health', enemy.getData('health') - 1)
 
-            if (x.getData('health') <= 0) {
-                let posX = x.x
-                let posY = x.y
+            if (enemy.getData('health') <= 0) {
+                let posX = enemy.x
+                let posY = enemy.y
 
-                x.destroy()
+                enemy.destroy()
 
-                let a = this.physics.add.sprite(posX, posY, 'destroy_particles')
-                    .setScale(1)
+                let destroyParticle = this.physics.add.sprite(posX, posY, 'destroy_particles')
+                    .setScale(1.1)
                     .anims.play('destroyed')
 
-                a.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
-                    a.destroy()
+                destroyParticle.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+                    destroyParticle.destroy()
                 }, this)
             }
         })
