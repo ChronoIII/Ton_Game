@@ -48,6 +48,10 @@ export class Preloader extends Scene
         })
         this.load.image('basic_bullet', 'bullets/BALLA0.png')
         this.load.image('shield_barrier', 'barrier/spr_shield.png')
+        this.load.image('background', 'ui/back2.png', {
+            // frameHeight: 700,
+            // frameWidth: 400,
+        })
     }
 
     create ()

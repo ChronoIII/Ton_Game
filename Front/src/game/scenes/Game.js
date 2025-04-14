@@ -61,6 +61,11 @@ export class Game extends Scene
         let height = this.cameras.main.height
         let width = this.cameras.main.width
 
+        let bg = this.add.sprite(0, 0, 'background')
+        bg.setOrigin(0,0)
+        bg.displayHeight = height
+        bg.displayWidth = width
+
         this.#player = this.physics.add.sprite(width / 2, height + 32, 'basic_turret')
             .setOrigin(0.5, 1.5)
         this.#barrier = this.physics.add.sprite(width / 2, height, 'shield_barrier')
