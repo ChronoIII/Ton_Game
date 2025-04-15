@@ -9,9 +9,6 @@ export class Preloader extends Scene
 
     init ()
     {
-        // //  We loaded this image in our Boot Scene, so we can display it here
-        // this.add.image(512, 384, 'background');
-
         // //  A simple progress bar. This is the outline of the bar.
         // this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
 
@@ -32,8 +29,6 @@ export class Preloader extends Scene
         //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets')
 
-        // this.load.image('logo', 'logo.png');
-        this.load.image('star', 'star.png')
         this.load.spritesheet('basic_turret', 'basic_turret/GLOB.png', {
             frameWidth: 64,
             frameHeight: 64,
@@ -48,10 +43,7 @@ export class Preloader extends Scene
         })
         this.load.image('basic_bullet', 'bullets/BALLA0.png')
         this.load.image('shield_barrier', 'barrier/spr_shield.png')
-        this.load.image('background', 'ui/back2.png', {
-            // frameHeight: 700,
-            // frameWidth: 400,
-        })
+        this.load.image('background', 'ui/back2.png')
     }
 
     create ()

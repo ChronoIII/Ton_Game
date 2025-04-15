@@ -1,88 +1,86 @@
 export default class Enemy extends Phaser.Physics.Arcade.Sprite
 {
-    #timer
-    #moveSpeed
+    #scene
+    #moveSpeed = 150
+    #hit = 3
 
-    #enemy
+    constructor(scene, x, y, texture) {
+        super(scene, x, y, texture)
 
-    constructor(scene) {
-        super(scene)
+        this.#scene = scene
+        this.#spawn()
     }
 
-    preload() {
-        this.anims.create({
-            key: 'hopp_walk',
-            frames: this.anims.generateFrameNames('hopp', {
-                frames: [0, 1]
-            }),
-            frameRate: 16,
-            repeat: -1
-        })
+    damage(gameObject, callback = null) {
+        this.#scene.physics.add.overlap(this, gameObject, (current, other) => {
+            if (current.getData('invincible')) {
+                return;
+            }
 
-        this.anims.create({
-            key: 'destroyed',
-            frames: this.anims.generateFrameNames('destroy_particles', {
-                frames: [0, 1, 2, 3, 4]
-            }),
-            frameRate: 16,
-            repeat: 0
-        })
-    }
-
-    update(time, delta) {
-        this.#timer += delta
-
-        while (this.#timer > 2500) {
-            this.#enemySpawner()
-            this.#timer = 0
-        }
-    }
-
-    collideDamage(object, callback = null) {
-        this.physics.add.overlap(this.#enemy, object, (enemy, object) => {
-            this.tweens.add({
-                targets: enemy,
+            this.#scene.tweens.add({
+                targets: current,
                 alpha: 0.1,
-                y: {
-                    from: enemy.y,
-                    to: enemy.y - 10
-                },
                 duration: 100,
                 repeat: 0,
                 yoyo: true,
+                y: current.y - 20,
                 onComplete: () => {
-                    enemy.y = enemy.y - 10
+                    current.setAlpha(1)
+                    current.setData('invincible', false)
                 }
             })
 
-            enemy.setData('health', enemy.getData('health') - 1)
+            current.setData('invincible', true)
+            current.setData('health', current.getData('health') - 1)
 
-            if (enemy.getData('health') <= 0) {
-                let posX = enemy.x
-                let posY = enemy.y
+            other.destroy()
 
-                enemy.destroy()
+            if (current.getData('health') <= 0) {
+                let posX = current.x
+                let posY = current.y
 
-                let destroyParticle = this.physics.add.sprite(posX, posY, 'destroy_particles')
-                    .setScale(1)
+                current.destroy()
+
+                let destroyParticle = this.#scene.physics.add.sprite(posX, posY, 'destroy_particles')
+                    .setScale(1.1)
                     .anims.play('destroyed')
 
                 destroyParticle.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
                     destroyParticle.destroy()
+                    this.destroy()
                 }, this)
             }
+
+            if (callback !== null) callback()
         })
     }
 
-    #enemySpawner () {
-        let velocity = new Phaser.Math.Vector2(1, 1)
-                .setLength(this.#moveSpeed)
+    #spawn() {
+        this.#scene.add.existing(this)
+        this.#scene.physics.world.enable(this)
 
-        this.#enemy = this.physics.add.sprite(Math.random() * (0, this.cameras.main.width), 0, 'hopp')
-            .setVelocity(0, velocity.y)
+        this.#initializer('hopp')
+    }
+
+    #initializer(_enemyType) {
+        switch (_enemyType) {
+            case 'hopp':
+                this.anims.play('hopp_walk', true)
+                break
+        }
+
+        this
+            .setVelocity(0, this.#moveSpeed)
             .setScale(0.8)
-            .setData('health', 3)
-        
-        this.#enemy.anims.play('hopp_walk', true)
+            .setData('health', this.#hit)
+
+        this.#scene.tweens.add({
+            targets: [this],
+            scale: 0.9,
+            ease: 'Linear',
+            duration: 1000,
+            repeat: -1,
+            yoyo: true,
+        })
     }
 }

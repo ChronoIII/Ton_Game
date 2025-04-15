@@ -1,0 +1,35 @@
+{
+    "meta": {
+        "image": "ui.png",
+        "scale": 1
+    },
+    "frames": [
+        {
+            "filename": "ui-item-slots",
+            "frame": {
+                "x": 0,
+                "y": 7,
+                "w": 13,
+                "h": 3
+            },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": {
+                "x": 0,
+                "y": 7,
+                "w": 13,
+                "h": 3
+            },
+            "sourceSize": {
+                "x": 0,
+                "y": 7,
+                "w": 13,
+                "h": 3
+            },
+            "pivot": {
+                "x": 0.5,
+                "y": 0.5
+            }
+        }
+    ]
+}
