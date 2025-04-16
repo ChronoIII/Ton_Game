@@ -15,10 +15,8 @@ export class Game extends Scene
     #barrier = null
     #bullets = []
 
-    #test = false
-    #asd = 0
-
     #drawPad
+    #test = []
 
     constructor ()
     {
@@ -67,7 +65,8 @@ export class Game extends Scene
                 // this.physics.world.timeScale = 10
                 this.#drawPad.createCanvas()
                     .on('canvas.panend', (pan, canvas, lastPointer) => {
-                        Erosion.erode(canvas)
+                        let rgb = Erosion.applyErosion(canvas)
+                        this.#test.push(rgb)
                         this.#drawPad.destroy()
                     })
             })
@@ -114,6 +113,11 @@ export class Game extends Scene
         this.input.on('pointerdown', (pointer, object) => {
             // @TODO: Structure and relocate this catcher
             if (this.#drawPad.ON_DISPLAY) return
+
+            if (this.#test.length > 1) {
+                console.log(Erosion.compareImages(this.#test[0], this.#test[1]))
+                this.#test = []
+            }
 
             let pointerX = pointer.x
             let pointerY = pointer.y
