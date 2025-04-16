@@ -40,24 +40,6 @@ export default class EnemyManager {
     }
 
     #initialize() {
-        // this.#scene.load.scenePlugin({
-        //     key: 'rexuiplugin',
-        //     url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js',
-        //     sceneKey: 'rexUI'
-        // });
-
-        // this.#scene.load.plugin(
-        //     'rexrestorabledataplugin', 
-        //     'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexrestorabledataplugin.min.js', 
-        //     true
-        // );
-
-        // this.#scene.load.plugin(
-        //     'rexlzstringplugin', 
-        //     'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlzstringplugin.min.js', 
-        //     true
-        // );
-
         this.#scene.anims.create({
             key: 'hopp_walk',
             frames: this.#scene.anims.generateFrameNames('hopp', {

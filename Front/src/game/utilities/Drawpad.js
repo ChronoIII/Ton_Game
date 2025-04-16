@@ -1,47 +1,89 @@
 export default class Drawpad {
-    COLOR_PRIMARY = 0x4e342e
+    COLOR_PRIMARY = 0x4e342e33
     PANEL
     CANVAS
+    ON_DISPLAY = false
 
     #scene
     #height = 300
     #width = 300
     #x = 0
     #y = 0
+    #hue = 0
 
     constructor(scene) {
+        // super(scene, 'drawpad')
         this.#scene = scene
 
-        this.createCanvas()
+        this.#scene.load.scenePlugin({
+            key: 'rexuiplugin',
+            url: 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexuiplugin.min.js',
+            sceneKey: 'rexUI'
+        });
+
+        this.#scene.load.plugin(
+            'rexrestorabledataplugin', 
+            'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexrestorabledataplugin.min.js', 
+            true
+        );
+
+        this.#scene.load.plugin(
+            'rexlzstringplugin', 
+            'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexlzstringplugin.min.js', 
+            true
+        );
     }
 
     createCanvas() {
         let panel = this.#scene.rexUI.add.sizer({
-            orientation: 'x'
+            orientation: 'y'
         })
-        let background = this.#scene.rexUI.add.roundRectangle(0, 0, 0, 0, 20, this.COLOR_PRIMARY)
         let canvas = this.#scene.rexUI.add.canvas(this.#x, this.#y, this.#width, this.#height)
-            .setOrigin(0)
+            .setOrigin(0.5)
 
-        panel
-            .addBackground(background)
-            .add(
+        panel.add(
                 canvas,
                 0,
                 'center',
                 false,
             )
+            .modal({
+                touchOutsideClose: true,
+                destroy: true,
+                cover: {
+                    color: 0x0,
+                    alpha: 0.5,
+                    transitIn: function(gameObject, duration) { },
+                    transitOut: function(gameObject, duration) { },
+                },
+                duration: {
+                    in: 200
+                },
 
-        panel.addChildrenMap('canvas', canvas)
+            }, () => {
+                this.ON_DISPLAY = false
+            })
+            .bringToTop()
+            .addChildrenMap('canvas', canvas)
 
         this.#scene.rexUI.add.pan(canvas)
-            .on('pan', function(pan, gameObject, lastPointer) {
+            .on('pan', (pan, gameObject, lastPointer) => {
                 panel.emit('canvas.pan', pan, gameObject, lastPointer);
+
+                this.circle(
+                    Math.floor(gameObject.input.localX),
+                    Math.floor(gameObject.input.localY),
+                    5, // radius
+                    `hsl(${this.#hue},50%,50%)`, // color
+                )
+
+                this.#hue = (this.#hue + 3) % 360
             })
             .on('panend', function(pan, gameObject, lastPointer) {
                 panel.emit('canvas.panend', pan, gameObject, lastPointer);
             })
         
+        this.ON_DISPLAY = true
         this.CANVAS = canvas
         this.PANEL = panel
 
@@ -55,15 +97,20 @@ export default class Drawpad {
         return this;
     }
 
+    setPosition(_x, _y) {
+        this.#x = _x
+        this.#y = _y
+        return this
+    }
+
     setSize(_width, _height) {
         this.#width = _width
         this.#height = _height
-        this.CANVAS.setSize(_width, _height)
         return this
     }
 
     clear() {
-        this.canvas.fill('black');
+        this.canvas.fill(0x000);
         return this;
     }
 
@@ -88,5 +135,11 @@ export default class Drawpad {
 
     on(event, callback) {
         this.PANEL.on(event, callback)
+        return this
+    }
+
+    destroy() {
+        this.ON_DISPLAY = false
+        this.PANEL.fadeOutDestroy(200)
     }
 }
