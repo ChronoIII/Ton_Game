@@ -12,7 +12,6 @@ export default class Drawpad {
     #hue = 0
 
     constructor(scene) {
-        // super(scene, 'drawpad')
         this.#scene = scene
 
         this.#scene.load.scenePlugin({

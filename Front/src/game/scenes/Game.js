@@ -98,7 +98,7 @@ export class Game extends Scene
         if (this.#timer > this.#interval) {
             this.#enemyManager
                 .damageTo(this.#bullets)
-                .spawnEnemiesPerTime(2)
+                .spawnEnemiesPerTime(5)
             this.#timer = 0
         }
 

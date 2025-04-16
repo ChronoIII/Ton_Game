@@ -31,9 +31,29 @@ export default class EnemyManager {
         let width = this.#scene.cameras.main.width
 
         let spawnCount = Math.floor((Math.random() * count) + 1)
+        let spawnedList = []
         for (let i = 1; i <= spawnCount; i++) {
-            new Enemy(this.#scene, Math.random() * (0, width), 0, 'hopp')
-                .damage(this.#damage)
+            let randomPosX
+            let checker = true
+            let stepper = 0
+
+            while (checker) {
+                randomPosX = Math.random() * (0, width)
+
+                checker = spawnedList.some((x) => {
+                    return randomPosX - 48 <= x.x && randomPosX + 48 >= x.x
+                })
+
+                stepper++
+                if (stepper >= 2) break
+            }
+
+            if (checker) continue
+            spawnedList.push(
+                new Enemy(this.#scene, randomPosX, 0, 'hopp')
+                    .damage(this.#damage)
+            );
+
         } 
 
         return this

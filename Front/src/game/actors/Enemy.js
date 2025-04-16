@@ -53,6 +53,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite
 
             if (callback !== null) callback()
         })
+
+        return this
     }
 
     #spawn() {
