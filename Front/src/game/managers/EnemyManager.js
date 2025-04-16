@@ -7,8 +7,6 @@ export default class EnemyManager {
     #damage
     #enemies = []
     
-    #timer = 0
-    
     constructor() {
         if (EnemyManager.#instance) return EnemyManager.#instance
         EnemyManager.#instance = this
@@ -49,8 +47,10 @@ export default class EnemyManager {
             }
 
             if (checker) continue
+
+            let randomPosY = Math.floor((Math.random() * 50))
             spawnedList.push(
-                new Enemy(this.#scene, randomPosX, 0, 'hopp')
+                new Enemy(this.#scene, randomPosX, randomPosY, 'hopp')
                     .damage(this.#damage)
             );
 

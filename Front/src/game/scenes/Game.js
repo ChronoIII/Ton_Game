@@ -1,6 +1,7 @@
 import { Scene, Input } from 'phaser';
 import Drawpad from '../utilities/Drawpad'
 import EnemyManager from '../managers/EnemyManager'
+import Erosion from '../utilities/Erosion'
 
 export class Game extends Scene
 {
@@ -8,7 +9,7 @@ export class Game extends Scene
 
     #pointer = null
     #timer = 0
-    #interval = 3000
+    #interval = 5000
 
     #player = null
     #barrier = null
@@ -66,7 +67,7 @@ export class Game extends Scene
                 // this.physics.world.timeScale = 10
                 this.#drawPad.createCanvas()
                     .on('canvas.panend', (pan, canvas, lastPointer) => {
-                        console.log('fjkashdjkhjsd')
+                        Erosion.erode(canvas)
                         this.#drawPad.destroy()
                     })
             })
