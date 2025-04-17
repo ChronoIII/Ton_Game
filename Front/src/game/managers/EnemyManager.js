@@ -5,7 +5,7 @@ export default class EnemyManager {
 
     #scene
     #damage
-    #enemies = []
+    static #enemies = []
     
     constructor() {
         if (EnemyManager.#instance) return EnemyManager.#instance
@@ -54,9 +54,33 @@ export default class EnemyManager {
                     .damage(this.#damage)
             );
 
-        } 
+        }
+
+        EnemyManager.#enemies.push(...spawnedList)
 
         return this
+    }
+
+    outOfBounds(callback = null) {
+        EnemyManager.#enemies.forEach((enemy, index) => {
+            if (enemy.y > this.#scene.cameras.main.height) {
+                console.log('outside detected')
+
+                if (!!callback) callback()
+
+                EnemyManager.#enemies.splice(index, 1)
+                    
+                // not destroying
+                EnemyManager.#enemies[index].destroy()
+                
+                console.log(enemy)
+                
+            }
+        })
+    }
+
+    static getEnemyCount () {
+        return this.#enemies
     }
 
     #initialize() {

@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import CommandManager from '../managers/CommandManager';
 
 export class Preloader extends Scene
 {
@@ -44,6 +45,8 @@ export class Preloader extends Scene
         this.load.image('basic_bullet', 'bullets/BALLA0.png')
         this.load.image('shield_barrier', 'barrier/spr_shield.png')
         this.load.image('background', 'ui/back2.png')
+
+        // CommandManager.initializeCommands(this)
     }
 
     create ()

@@ -1,23 +1,28 @@
 import { Scene, Input } from 'phaser';
 import Drawpad from '../utilities/Drawpad'
 import EnemyManager from '../managers/EnemyManager'
-import Erosion from '../utilities/Erosion'
+import CommandManager from '../managers/CommandManager';
 
 export class Game extends Scene
 {
     #enemyManager
 
     #pointer = null
-    #timer = 0
-    #interval = 5000
+    #spawnTimer = 0
+    #outOfBoundTimer = 0
+    #spawnInterval = 5000
+    #outOfBoundInternal = 1000
 
     #player = null
     #barrier = null
     #bullets = []
-
+    #canFire = true
+    
     #drawPad
-    #test = []
 
+    #progressBar
+    #enemyProgress = 0.01
+    
     constructor ()
     {
         super('Game');
@@ -43,6 +48,8 @@ export class Game extends Scene
 
     create ()
     {
+        console.log(CommandManager.getCommands())
+
         let height = this.cameras.main.height
         let width = this.cameras.main.width
 
@@ -53,10 +60,24 @@ export class Game extends Scene
         bg.displayHeight = height
         bg.displayWidth = width * 1.2
 
+        // Progress Bar
+        this.#progressBar = this.add.graphics()
+            .clear()
+            .fillStyle(0xFF0000, 1)
+            .fillRect(width - 40, height / 2 - 50 - 8, 30, 300)
+
+        // Progress Box
+        let progressBox = this.add.graphics()
+            .fillStyle(0xFFFFFF, 1)
+            .fillRect(width - 40, height / 2 - 50 - 8, 30, 300 * (1.0 - this.#enemyProgress))
+
+        this.world.bringToTop(this.#progressBar)
+        this.world.bringToTop(progressBox)
+
         // Initialize DrawPad
         this.#drawPad
             .setPosition(width / 2, height - (128 * 2))
-            .setSize(width / 2, 300)
+            .setSize(300, 300)
         
         let squareSize = 70
         this.add.rectangle(width - ((squareSize / 2) + 10), height - ((squareSize / 2) + 8), squareSize, squareSize, 0xFFFFFF, 0.5)
@@ -65,8 +86,7 @@ export class Game extends Scene
                 // this.physics.world.timeScale = 10
                 this.#drawPad.createCanvas()
                     .on('canvas.panend', (pan, canvas, lastPointer) => {
-                        let rgb = Erosion.applyErosion(canvas)
-                        this.#test.push(rgb)
+                        CommandManager.findCommand(canvas)
                         this.#drawPad.destroy()
                     })
             })
@@ -94,12 +114,20 @@ export class Game extends Scene
         let height = this.cameras.main.height
 
         // Enemy Spawner timer
-        this.#timer += delta
-        if (this.#timer > this.#interval) {
+        this.#spawnTimer += delta
+        if (this.#spawnTimer > this.#spawnInterval) {
             this.#enemyManager
                 .damageTo(this.#bullets)
                 .spawnEnemiesPerTime(5)
-            this.#timer = 0
+            this.#spawnTimer = 0
+        }
+
+        // Out of boundss checker
+        this.#outOfBoundTimer += delta
+        if (this.#outOfBoundTimer > this.#outOfBoundInternal) {
+            this.#enemyManager
+                .outOfBounds()
+            this.#outOfBoundTimer = 0
         }
 
         // Reset recoil knockback (player)
@@ -112,12 +140,9 @@ export class Game extends Scene
     #mouseInputEvents () {
         this.input.on('pointerdown', (pointer, object) => {
             // @TODO: Structure and relocate this catcher
-            if (this.#drawPad.ON_DISPLAY) return
+            if (this.#drawPad.ON_DISPLAY || !this.#canFire) return
 
-            if (this.#test.length > 1) {
-                console.log(Erosion.compareImages(this.#test[0], this.#test[1]))
-                this.#test = []
-            }
+            // this.#canFire = false
 
             let pointerX = pointer.x
             let pointerY = pointer.y

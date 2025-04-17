@@ -35,12 +35,41 @@ export default class Drawpad {
 
     createCanvas() {
         let panel = this.#scene.rexUI.add.sizer({
-            orientation: 'y'
+            orientation: 'x'
         })
+        let background = this.#scene.rexUI.add.roundRectangle(this.#x, this.#y, this.#width, this.#height, 10, 0xFFFFFF, 0.5)
+            .setOrigin(0.5)
         let canvas = this.#scene.rexUI.add.canvas(this.#x, this.#y, this.#width, this.#height)
             .setOrigin(0.5)
+        let text = this.#scene.add.text(
+            this.#x,
+            this.#y - (this.#height / 2 + 20),
+            'Send command to the HQ',
+            {
+                fontFamily: 'Verdana',
+                fontSize: '15px',
+                color: '#fff8',
+            }
+        )
+        .setOrigin(0.5)
+        let label = this.#scene.rexUI.add.label({
+            x: this.#x,
+            y: this.#y - (this.#height / 2 + 20),
+            origin: 0.5,
+            align: 'center',
+            text: text
+        })
 
-        panel.add(
+
+        panel
+            .add(
+                label,
+                0,
+                'center',
+                false,
+            )
+            .addBackground(background, 0, 'center', 10)
+            .add(  
                 canvas,
                 0,
                 'center',
@@ -54,9 +83,6 @@ export default class Drawpad {
                     alpha: 0.5,
                     transitIn: function(gameObject, duration) { },
                     transitOut: function(gameObject, duration) { },
-                },
-                duration: {
-                    in: 200
                 },
 
             }, () => {
@@ -73,7 +99,8 @@ export default class Drawpad {
                     Math.floor(gameObject.input.localX),
                     Math.floor(gameObject.input.localY),
                     5, // radius
-                    `hsl(${this.#hue},50%,50%)`, // color
+                    // `hsl(${this.#hue},50%,50%)`, // color
+                    `hsl(0,100%,100%)`
                 )
 
                 this.#hue = (this.#hue + 3) % 360

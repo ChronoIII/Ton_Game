@@ -35,6 +35,7 @@ export default class Erosion {
         for (let y = kOffset; y < height - kOffset; y++) {
             for (let x = kOffset; x < width - kOffset; x++) {
                 let minR = 255, minG = 255, minB = 255;
+
                 for (let ky = -kOffset; ky <= kOffset; ky++) {
                     for (let kx = -kOffset; kx <= kOffset; kx++) {
                         const i = ((y + ky) * width + (x + kx)) * 4;
@@ -43,6 +44,7 @@ export default class Erosion {
                         minB = Math.min(minB, imageData[i + 2]);
                     }
                 }
+                
                 const idx = (y * width + x) * 4;
                 output[idx] = minR;
                 output[idx + 1] = minG;
