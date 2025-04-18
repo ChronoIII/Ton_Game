@@ -21,6 +21,8 @@ export class Game extends Scene
     #drawPad
 
     #progressBar
+    #progressBox
+    #enemyPassed = 0
     #enemyProgress = 0.01
     
     constructor ()
@@ -67,12 +69,15 @@ export class Game extends Scene
             .fillRect(width - 40, height / 2 - 50 - 8, 30, 300)
 
         // Progress Box
-        let progressBox = this.add.graphics()
+        this.#progressBox = this.add.graphics()
+
+        this.#progressBox
+            .clear()
             .fillStyle(0xFFFFFF, 1)
             .fillRect(width - 40, height / 2 - 50 - 8, 30, 300 * (1.0 - this.#enemyProgress))
 
-        this.world.bringToTop(this.#progressBar)
-        this.world.bringToTop(progressBox)
+        // this.world.bringToTop(this.#progressBar)
+        // this.world.bringToTop(progressBox)
 
         // Initialize DrawPad
         this.#drawPad
@@ -112,6 +117,7 @@ export class Game extends Scene
 
     update (time, delta) {
         let height = this.cameras.main.height
+        let width = this.cameras.main.width
 
         // Enemy Spawner timer
         this.#spawnTimer += delta
@@ -126,7 +132,32 @@ export class Game extends Scene
         this.#outOfBoundTimer += delta
         if (this.#outOfBoundTimer > this.#outOfBoundInternal) {
             this.#enemyManager
-                .outOfBounds()
+                .outOfBounds(() => {
+                    this.#enemyPassed++
+
+                    // Redraw loading bar
+                    this.#progressBox.destroy()
+                    this.#progressBox = this.add.graphics()
+                        .fillStyle(0xFFFFFF, 1)
+                        .fillRect(width - 40, height / 2 - 50 - 8, 30, 300 * Math.max(0.1, (1.0 - (this.#enemyPassed / 50))))
+
+                    let posX = this.#progressBar.x
+                    this.tweens.add({
+                        targets: [
+                            this.#progressBar,
+                            this.#progressBox,
+                        ],
+                        x: {
+                            from: posX - 5,
+                            to: posX,
+                        },
+                        duration: 200,
+                        repeat: 0,
+                        onComplete: () => {
+                            this.#progressBar.x = posX
+                        }
+                    })
+                })
             this.#outOfBoundTimer = 0
         }
 

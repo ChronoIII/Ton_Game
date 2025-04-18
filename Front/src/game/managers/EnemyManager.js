@@ -53,7 +53,6 @@ export default class EnemyManager {
                 new Enemy(this.#scene, randomPosX, randomPosY, 'hopp')
                     .damage(this.#damage)
             );
-
         }
 
         EnemyManager.#enemies.push(...spawnedList)
@@ -68,13 +67,9 @@ export default class EnemyManager {
 
                 if (!!callback) callback()
 
-                EnemyManager.#enemies.splice(index, 1)
-                    
-                // not destroying
-                EnemyManager.#enemies[index].destroy()
-                
-                console.log(enemy)
-                
+                let _enemies = [...EnemyManager.#enemies]
+                _enemies.splice(index, 1)
+                EnemyManager.#enemies = _enemies
             }
         })
     }
