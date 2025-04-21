@@ -27,7 +27,9 @@
         "build-nolog": "vite build --config vite/config.prod.mjs"
     },
     "dependencies": {
+        "@2players/dollar1-unistroke-recognizer": "^0.3.1",
         "phaser": "^3.88.2",
+        "simplify-js": "^1.2.4",
         "vue": "^3.4.27"
     },
     "devDependencies": {

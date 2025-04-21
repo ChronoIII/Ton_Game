@@ -1,3 +1,6 @@
+import simplify from "simplify-js"
+import GestureRecognizer from '@2players/dollar1-unistroke-recognizer'
+
 export default class Drawpad {
     COLOR_PRIMARY = 0x4e342e33
     PANEL
@@ -10,6 +13,13 @@ export default class Drawpad {
     #x = 0
     #y = 0
     #hue = 0
+
+    #isDrawing = false
+    #firstX
+    #firstY
+    #lastX
+    #lastY
+    #points = []
 
     constructor(scene) {
         this.#scene = scene
@@ -95,18 +105,82 @@ export default class Drawpad {
             .on('pan', (pan, gameObject, lastPointer) => {
                 panel.emit('canvas.pan', pan, gameObject, lastPointer);
 
-                this.circle(
-                    Math.floor(gameObject.input.localX),
-                    Math.floor(gameObject.input.localY),
-                    5, // radius
-                    // `hsl(${this.#hue},50%,50%)`, // color
-                    `hsl(0,100%,100%)`
-                )
+                let ctx = this.CANVAS.context
 
-                this.#hue = (this.#hue + 3) % 360
+                const currentX = gameObject.input.localX
+                const currentY = gameObject.input.localY
+
+                this.#points.push({
+                    x: currentX,
+                    y: currentY,
+                })
+
+                if (!this.#firstX || !this.#firstY) {
+                    this.#firstX = currentX
+                    this.#firstY = currentY
+                }
+
+                if (!this.#lastX) {
+                    this.#lastX = currentX
+                }
+
+                if (!this.#lastY) {
+                    this.#lastY = currentY
+                }
+
+                ctx.beginPath()
+                ctx.moveTo(this.#lastX, this.#lastY)
+                ctx.lineTo(currentX, currentY)
+                ctx.strokeStyle = 'white'
+                ctx.lineWidth = 10
+                ctx.lineCap = 'round'
+                ctx.stroke()
+
+                this.#lastX = currentX
+                this.#lastY = currentY
+
+                this.canvas.needRedraw();
             })
-            .on('panend', function(pan, gameObject, lastPointer) {
+            .on('panend', (pan, gameObject, lastPointer) => {
                 panel.emit('canvas.panend', pan, gameObject, lastPointer);
+
+                this.#points.push({
+                    x: this.#firstX,
+                    y: this.#firstY,
+                })
+
+                // Connect the line from last point to first point visual
+                let ctx = this.CANVAS.context
+                ctx.beginPath()
+                ctx.moveTo(this.#lastX, this.#lastY)
+                ctx.lineTo(this.#firstX, this.#firstY)
+                ctx.strokeStyle = 'white'
+                ctx.lineWidth = 10
+                ctx.lineCap = 'round'
+                ctx.stroke()
+                this.canvas.needRedraw();
+
+                let gr = new GestureRecognizer()
+                console.log(gr.recognize(this.#points, true))
+
+                // @REFERENCE: https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm
+                // @REFERENCE: https://mourner.github.io/simplify-js/
+                // let simplifiedPoints = simplify(this.#points, 3)
+
+                // let rewritePoints = simplifiedPoints.map((data) => {
+                //     return [data.x, data.y]
+                // })
+
+                // // Connect from last point to first point
+                // // Additional points to get the first angle
+                // rewritePoints.push(rewritePoints[0])
+                // rewritePoints.push(rewritePoints[1])
+
+                // console.log(simplifiedPoints)
+                // console.log(rewritePoints)
+
+                // let angles = this.#getCornerAngle(rewritePoints)
+                // console.log(angles)
             })
         
         this.ON_DISPLAY = true
@@ -167,5 +241,39 @@ export default class Drawpad {
     destroy() {
         this.ON_DISPLAY = false
         this.PANEL.fadeOutDestroy(200)
+    }
+
+    // $1 Unistroke Recognizer
+    // @REFERENCE: https://depts.washington.edu/acelab/proj/dollar/index.html
+    // @REFERENCE: https://www.npmjs.com/package/@2players/dollar1-unistroke-recognizer
+    #getCornerAngle(pts) {
+        let angles = []
+
+        for (let i = 1; i < pts.length - 1; i++) {
+            const [ax, ay] = pts[i - 1]
+            const [bx, by] = pts[i]
+            const [cx, cy] = pts[i + 1]
+
+            const angle = this.#getAngle(ax, ay, bx, by, cx, cy)
+            if (angle > 150 || angle < 30) continue
+            angles.push(angle)
+        }
+
+        return angles
+    }
+
+    #getAngle(ax, ay, bx, by, cx, cy) {
+        const AB = [ax - bx, ay - by]
+        const CB = [cx - bx, cy - by]
+ 
+        const dot = AB[0] * CB[0] + AB[1] * CB[1]
+        const magAB = Math.hypot(AB[0], AB[1])
+        const magCB = Math.hypot(CB[0], CB[1])
+
+        const cosTheta = dot / (magAB * magCB)
+        const angleRad = Math.acos(Math.max(-1, Math.min(1, cosTheta)))
+        const angleDeg = angleRad * (180 / Math.PI)
+
+        return angleDeg
     }
 }

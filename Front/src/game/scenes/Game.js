@@ -91,8 +91,8 @@ export class Game extends Scene
                 // this.physics.world.timeScale = 10
                 this.#drawPad.createCanvas()
                     .on('canvas.panend', (pan, canvas, lastPointer) => {
-                        CommandManager.findCommand(canvas)
-                        this.#drawPad.destroy()
+                        // CommandManager.findCommand(canvas)
+                        // this.#drawPad.destroy()
                     })
             })
 
@@ -148,10 +148,10 @@ export class Game extends Scene
                             this.#progressBox,
                         ],
                         x: {
-                            from: posX - 5,
+                            from: posX + (Math.random() > 0.5 ? 5 : -5),
                             to: posX,
                         },
-                        duration: 200,
+                        duration: 100,
                         repeat: 0,
                         onComplete: () => {
                             this.#progressBar.x = posX
@@ -183,7 +183,8 @@ export class Game extends Scene
 
             let adjacent = playerX - pointerX
             let opposite = playerY - pointerY
-            let hypotenuse = Math.sqrt(Math.pow(adjacent, 2) + Math.pow(opposite, 2))
+            // let hypotenuse = Math.sqrt(Math.pow(adjacent, 2) + Math.pow(opposite, 2))
+            let hypotenuse = Math.hypot(adjacent, opposite)
 
             // @TITLE: Pythagoream
             // @REFERENCE: https://stackoverflow.com/questions/9705123/how-can-i-get-sin-cos-and-tan-to-use-degrees-instead-of-radians
