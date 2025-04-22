@@ -46,7 +46,8 @@ export class Preloader extends Scene
         this.load.image('shield_barrier', 'barrier/spr_shield.png')
         this.load.image('background', 'ui/back2.png')
 
-        // CommandManager.initializeCommands(this)
+        this.load.image('bar_command', 'commands/bar.png')
+        this.load.image('razor_command', 'commands/razor.png')
     }
 
     create ()

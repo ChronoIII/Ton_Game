@@ -2,20 +2,22 @@ import { Scene, Input } from 'phaser';
 import Drawpad from '../utilities/Drawpad'
 import EnemyManager from '../managers/EnemyManager'
 import CommandManager from '../managers/CommandManager';
+import Recognizer from '../utilities/Recognizer';
 
 export class Game extends Scene
 {
     #enemyManager
 
-    #pointer = null
     #spawnTimer = 0
     #outOfBoundTimer = 0
     #spawnInterval = 5000
     #outOfBoundInternal = 1000
+    #roundTimer
+    #roundInterval = 30000
 
     #player = null
     #barrier = null
-    #bullets = []
+    #utilities = []
     #canFire = true
     
     #drawPad
@@ -23,7 +25,11 @@ export class Game extends Scene
     #progressBar
     #progressBox
     #enemyPassed = 0
+    #enemyMax = 10
     #enemyProgress = 0.01
+    #enemiesPerTick = 5
+
+    #razorObjectGroup
     
     constructor ()
     {
@@ -33,8 +39,6 @@ export class Game extends Scene
     preload () {
         this.#enemyManager = new EnemyManager()
             .changeScene(this)
-
-        this.#pointer = this.input.activePointer
 
         this.anims.create({
             key: 'fire',
@@ -50,8 +54,6 @@ export class Game extends Scene
 
     create ()
     {
-        console.log(CommandManager.getCommands())
-
         let height = this.cameras.main.height
         let width = this.cameras.main.width
 
@@ -62,43 +64,59 @@ export class Game extends Scene
         bg.displayHeight = height
         bg.displayWidth = width * 1.2
 
-        // Progress Bar
-        this.#progressBar = this.add.graphics()
-            .clear()
-            .fillStyle(0xFF0000, 1)
-            .fillRect(width - 40, height / 2 - 50 - 8, 30, 300)
+        // // Progress Bar
+        // this.#progressBar = this.add.graphics()
+        //     .clear()
+        //     .fillStyle(0xFF0000, 1)
+        //     .fillRect(width - 40, height / 2, 10, 300)
 
-        // Progress Box
-        this.#progressBox = this.add.graphics()
+        // // Progress Box
+        // this.#progressBox = this.add.graphics()
 
-        this.#progressBox
-            .clear()
-            .fillStyle(0xFFFFFF, 1)
-            .fillRect(width - 40, height / 2 - 50 - 8, 30, 300 * (1.0 - this.#enemyProgress))
+        // this.#progressBox
+        //     .clear()
+        //     .fillStyle(0xFFFFFF, 1)
+        //     .fillRect(width - 40, height / 2, 10, 300 * (1.0 - this.#enemyProgress))
 
-        // this.world.bringToTop(this.#progressBar)
-        // this.world.bringToTop(progressBox)
+        this.#progressBar = this.add.rectangle(width - 10, height / 2, 10, 300, 0xFF0000, 1)
+            .setOrigin(0.5)
+        this.#progressBox = this.add.rectangle(width - 10, height / 2, 10, 300 * (1.0 - (this.#enemyPassed / this.#enemyMax)), 0xFFFFFF, 1)
 
         // Initialize DrawPad
         this.#drawPad
             .setPosition(width / 2, height - (128 * 2))
             .setSize(300, 300)
         
-        let squareSize = 70
-        this.add.rectangle(width - ((squareSize / 2) + 10), height - ((squareSize / 2) + 8), squareSize, squareSize, 0xFFFFFF, 0.5)
+        // Drawpad Button
+        let squareSize = 60
+        let a = this.add.rectangle(width - ((squareSize / 2) + 10), height - ((squareSize / 2) + 8), squareSize + 5, squareSize, 0xFF0000, 0.7)
             .setInteractive()
             .on('pointerdown', () => {
-                // this.physics.world.timeScale = 10
                 this.#drawPad.createCanvas()
                     .on('canvas.panend', (pan, canvas, lastPointer) => {
-                        // CommandManager.findCommand(canvas)
-                        // this.#drawPad.destroy()
+                        let points = this.#drawPad.points()
+                        let recognizeData = Recognizer.recogize(points, 3)
+                        
+                        let commandObject = CommandManager.activeCommand(this, recognizeData)
+                        this.#utilities.push(commandObject)
+
+                        if (recognizeData == 'triangle') {
+                            this.#razorObjectGroup = commandObject
+                        }
+
+                        this.#drawPad.destroy()
                     })
             })
+        this.add.text(width - ((squareSize / 2) + 10), height - ((squareSize / 2) + 8), 'HQ', {
+            font: '800 19px arial',
+            fontSize: 18,
+            fontFamily: 'Verdana',
+            letterSpacing: 3,
+        }).setOrigin(0.5).setDepth(100)
 
         this.#player = this.physics.add.sprite(width / 2, height + 30, 'basic_turret')
             .setOrigin(0.5, 1.5)
-            .setScale(0.8)
+            .setScale(1)
             .setData('posX', width / 2)
             .setData('posY', height + 30)
         this.#barrier = this.physics.add.sprite(width / 2, height, 'shield_barrier')
@@ -113,18 +131,33 @@ export class Game extends Scene
         })
 
         this.#mouseInputEvents()
+
+        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, (cam, effect) => {
+            this.scene.start('GameOver')
+        })
     }
 
     update (time, delta) {
         let height = this.cameras.main.height
         let width = this.cameras.main.width
 
+        // Round raise difficulty
+        // Spawn more enemies per tick (+3)
+        // Lower spawn interval (-1s)
+        this.#roundTimer += delta
+        if (this.#roundTimer > this.#roundInterval) {
+            this.#enemiesPerTick += 3
+            this.#spawnInterval -= 1000
+
+            this.#roundTimer = 0
+        }
+
         // Enemy Spawner timer
         this.#spawnTimer += delta
         if (this.#spawnTimer > this.#spawnInterval) {
             this.#enemyManager
-                .damageTo(this.#bullets)
-                .spawnEnemiesPerTime(5)
+                .damageTo(this.#utilities)
+                .spawnEnemiesPerTime(this.#enemiesPerTick)
             this.#spawnTimer = 0
         }
 
@@ -137,11 +170,12 @@ export class Game extends Scene
 
                     // Redraw loading bar
                     this.#progressBox.destroy()
-                    this.#progressBox = this.add.graphics()
-                        .fillStyle(0xFFFFFF, 1)
-                        .fillRect(width - 40, height / 2 - 50 - 8, 30, 300 * Math.max(0.1, (1.0 - (this.#enemyPassed / 50))))
+                    // this.#progressBox = this.add.graphics()
+                    //     .fillStyle(0xFFFFFF, 1)
+                    //     .fillRect(width - 40, height / 2, 10, 300 * Math.max(0.1, (1.0 - (this.#enemyPassed / this.#enemyMax))))
+                    this.#progressBar.add.rectangle(width - 10, height / 2, 10, 300 * (1.0 - (this.#enemyPassed / this.#enemyMax)), 0xFFFFFF, 1)
 
-                    let posX = this.#progressBar.x
+                    let posX = this.#progressBar.x 
                     this.tweens.add({
                         targets: [
                             this.#progressBar,
@@ -153,10 +187,7 @@ export class Game extends Scene
                         },
                         duration: 100,
                         repeat: 0,
-                        onComplete: () => {
-                            this.#progressBar.x = posX
-                        }
-                    })
+                    }) 
                 })
             this.#outOfBoundTimer = 0
         }
@@ -165,6 +196,16 @@ export class Game extends Scene
         if (this.#player.y < this.#player.getData('posY')) {
             this.#player.body.velocity.y = 0
             this.#player.y = this.#player.getData('posY')
+        }
+
+        if (!!this.#razorObjectGroup) {
+            Phaser.Actions.RotateAround(this.#razorObjectGroup.getChildren(), { x: this.cameras.main.width / 2, y: this.cameras.main.height }, 0.05);
+        }
+
+        // Game Over
+        if (this.#enemyPassed >= this.#enemyMax) {
+            this.scene.stop()
+            this.cameras.main.fadeOut(1000, 0, 0, 0)
         }
     }
 
@@ -208,10 +249,11 @@ export class Game extends Scene
             .setAngle(radian)
             .setLength(1500)
 
-        this.#bullets.push(
+        this.#utilities.push(
             this.physics.add.sprite(posX, posY, 'basic_bullet')
                 .setVelocity(-velocity.x, -velocity.y)
                 .setScale(2, 2)
+                .setData('durability', 1)
         )
     }
 }

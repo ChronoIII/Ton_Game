@@ -91,7 +91,7 @@ export default class EnemyManager {
         this.#scene.anims.create({
             key: 'destroyed',
             frames: this.#scene.anims.generateFrameNames('destroy_particles', {
-                frames: [0, 1, 2, 3, 4]
+                frames: [4, 3, 2, 1, 0]
             }),
             frameRate: 16,
             repeat: 0

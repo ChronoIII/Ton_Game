@@ -1,13 +1,16 @@
 export default class Enemy extends Phaser.Physics.Arcade.Sprite
 {
     #scene
+    #texture
     #moveSpeed = 100
     #hit = 3
+    #points = 10
 
     constructor(scene, x, y, texture) {
         super(scene, x, y, texture)
 
         this.#scene = scene
+        this.#texture = texture
         this.#spawn()
     }
 
@@ -32,8 +35,23 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite
 
             current.setData('invincible', true)
             current.setData('health', current.getData('health') - 1)
+            other.setData('durability', other.getData('durability') - 1)
 
-            other.destroy()
+            if (other.getData('durability') <= 0) {
+                other.destroy()
+            }
+
+            this.#scene.tweens.add({
+                targets: [other],
+                alpha: 0.5,
+                x: {
+                    from: other.x + (Math.random() > 0.5 ? -5 : 5),
+                    to: other.x
+                },
+                duration: 100,
+                repeat: 0,
+                yoyo: true,
+            })
 
             if (current.getData('health') <= 0) {
                 let posX = current.x
@@ -61,7 +79,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite
         this.#scene.add.existing(this)
         this.#scene.physics.world.enable(this)
 
-        this.#initializer('hopp')
+        this.#initializer(this.#texture)
     }
 
     #initializer(_enemyType) {
@@ -75,6 +93,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite
             .setVelocity(0, this.#moveSpeed)
             .setScale(0.8)
             .setData('health', this.#hit)
+            .setData('points', this.#points)
 
         this.#scene.tweens.add({
             targets: [this],

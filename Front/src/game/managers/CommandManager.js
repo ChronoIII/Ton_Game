@@ -1,56 +1,38 @@
 import Erosion from '../utilities/Erosion'
 
 export default class CommandManager {
-    static #COMMANDS = Object.freeze({
-        AIR_STRIKE_COMMAND: 'airstrike.png',
-    })
+    // static #COMMANDS = Object.freeze({
+    //     AIR_STRIKE_COMMAND: 'airstrike.png',
+    // })
 
-    static #COMMAND_PATTERNS = []
-
-    static initializeCommands(scene) {
-        // let erodedCanvas = Erosion.applyErosion(canvas)
-
-        Object.keys(CommandManager.#COMMANDS).forEach(command => {
-            let commandFilename = CommandManager.#COMMANDS[command]
-
-            let _canvas = document.createElement('canvas')
-            _canvas.width = 300
-            _canvas.height = 300
-            let _ctx = _canvas.getContext('2d')
-
-            let _image = new Image()
-            
-            _image.onload = () => {
-                _ctx.drawImage(_image, 0, 0)
-
-                this.#COMMAND_PATTERNS.push({
-                    name: command,
-                    data: Erosion.applyErosion(_canvas)
-                })
-            }
-
-            _image.src = `assets/commands/${commandFilename}`
-        })
+    static #COMMAND_PATTERNS = {
+        triangle: 'RZR',
+        square: 'B-STRK'
     }
 
-    static getCommands() {
-        return this.#COMMAND_PATTERNS
-    }
+    static activeCommand(scene, gesture) {
+        let commandGesture = this.#COMMAND_PATTERNS[gesture]
+        switch (commandGesture) {
+            case 'RZR':
+                let razorRotationSpeed = 300
+                let group = scene.add.group()
 
-    static findCommand(_canvas) {
-        let erodedCanvas = Erosion.applyErosion(_canvas)
-        
-        // let a = this.#COMMAND_PATTERNS.filter((x) => {
-        //     let imgDiff = Erosion.compareImages(erodedCanvas, x.data)
+                for (let i = 1; i <= 2; i++) {
+                    let isEven = i % 2 == 0
+                    let razorGameObject = scene.physics.add.sprite(scene.cameras.main.width / 2, scene.cameras.main.height + (isEven ? 150 : -150), 'razor_command')
+                        .setAngularVelocity(razorRotationSpeed)
+                        .setOrigin(0.5)
+                        .setScale(0.5)
+                        .setData('durability', 10)
+                    group.add(razorGameObject)
+                }
 
-        //     return imgDiff <= 0.5
-        // })
-        console.log(
-            this.#COMMAND_PATTERNS.map(x => {
-                return Erosion.compareImages(x.data, erodedCanvas)
-            })
-        )
-
-        // console.log(a)
+                return group
+            case 'B-STRK':
+                let barVerticalSpeed = 100
+                return scene.physics.add.sprite(scene.cameras.main.width / 2, scene.cameras.main.height, 'bar_command')
+                    .setVelocity(0, -barVerticalSpeed)
+                    .setData('durability', 10)
+        }
     }
 }
