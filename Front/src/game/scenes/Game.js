@@ -30,6 +30,7 @@ export class Game extends Scene
     #enemiesPerTick = 5
 
     #razorObjectGroup
+    #objectWithActions = {}
     
     constructor ()
     {
@@ -97,12 +98,21 @@ export class Game extends Scene
                         let points = this.#drawPad.points()
                         let recognizeData = Recognizer.recogize(points, 3)
                         
-                        let commandObject = CommandManager.activeCommand(this, recognizeData)
-                        this.#utilities.push(commandObject)
+                        let command = CommandManager.activeCommand(this, recognizeData)
 
-                        if (recognizeData == 'triangle') {
-                            this.#razorObjectGroup = commandObject
+                        if (!!command.action) {
+                            let commandKey = command.action
+                            if (!this.#objectWithActions.hasOwnProperty(commandKey)) this.#objectWithActions[commandKey] = []
+
+                            this.#objectWithActions[commandKey].push(command)
                         }
+
+                        let commandGameObject = [command.data]
+                        if (command.data instanceof Phaser.GameObjects.Group) {
+                            commandGameObject = command.data.getChildren()
+                        }
+    
+                        this.#utilities.push(...commandGameObject)
 
                         this.#drawPad.destroy()
                     })
@@ -173,7 +183,7 @@ export class Game extends Scene
                     // this.#progressBox = this.add.graphics()
                     //     .fillStyle(0xFFFFFF, 1)
                     //     .fillRect(width - 40, height / 2, 10, 300 * Math.max(0.1, (1.0 - (this.#enemyPassed / this.#enemyMax))))
-                    this.#progressBar.add.rectangle(width - 10, height / 2, 10, 300 * (1.0 - (this.#enemyPassed / this.#enemyMax)), 0xFFFFFF, 1)
+                    this.#progressBar= this.add.rectangle(width - 10, height / 2, 10, 300 * (1.0 - (this.#enemyPassed / this.#enemyMax)), 0xFFFFFF, 1)
 
                     let posX = this.#progressBar.x 
                     this.tweens.add({
@@ -198,8 +208,9 @@ export class Game extends Scene
             this.#player.y = this.#player.getData('posY')
         }
 
-        if (!!this.#razorObjectGroup) {
-            Phaser.Actions.RotateAround(this.#razorObjectGroup.getChildren(), { x: this.cameras.main.width / 2, y: this.cameras.main.height }, 0.05);
+        // Run Phaser Action methods for command mechanics
+        if (Object.keys(this.#objectWithActions).length > 0) {
+            CommandManager.activateActionCommands(this.#objectWithActions)
         }
 
         // Game Over

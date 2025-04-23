@@ -5,6 +5,7 @@ export default class Recognizer {
     static #GESTURES = Object.freeze({
         TRIANGLE: 'triangle',
         SQUARE: 'square',
+        RECTANGLE: 'rectangle',
         CIRCLE: 'circle',
     })
 
@@ -26,7 +27,6 @@ export default class Recognizer {
         mapPointsToArray.push(mapPointsToArray[1])
         
         let angles = this.#getCornerAngle(mapPointsToArray)
-        console.log(angles)
         switch (angles.length) {
             case 3: 
                 return this.#GESTURES.TRIANGLE

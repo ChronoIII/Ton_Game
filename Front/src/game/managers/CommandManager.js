@@ -7,7 +7,8 @@ export default class CommandManager {
 
     static #COMMAND_PATTERNS = {
         triangle: 'RZR',
-        square: 'B-STRK'
+        square: 'B-STRK',
+        rectangle: 'B-STRK',
     }
 
     static activeCommand(scene, gesture) {
@@ -27,12 +28,41 @@ export default class CommandManager {
                     group.add(razorGameObject)
                 }
 
-                return group
+                return {
+                    data: group,
+                    action: 'RotateAround',
+                    config: {
+                        x: scene.cameras.main.width / 2,
+                        y: scene.cameras.main.height,
+                        radian: 0.05,
+                    }
+                }
             case 'B-STRK':
                 let barVerticalSpeed = 100
-                return scene.physics.add.sprite(scene.cameras.main.width / 2, scene.cameras.main.height, 'bar_command')
+                let object = scene.physics.add.sprite(scene.cameras.main.width / 2, scene.cameras.main.height, 'bar_command')
                     .setVelocity(0, -barVerticalSpeed)
                     .setData('durability', 10)
+
+                return {
+                    data: object,
+                    action: null,
+                    config: null,
+                }
         }
+    }
+
+    static activateActionCommands(actions) {
+        Object.keys(actions).forEach(actionKey => {
+            let actionObject = actions[actionKey]
+            switch (actionKey) {
+                case 'RotateAround':
+                    for (let i = 0; i < actionObject.length; i++) {
+                        let indexActionObject = actionObject[i]
+                        let gameObject = indexActionObject.data
+                        let config = indexActionObject.config
+                        Phaser.Actions.RotateAround(gameObject, { x: config.x, y: config.y }, config.radian)
+                    }
+            }
+        })
     }
 }
