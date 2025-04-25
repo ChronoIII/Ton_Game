@@ -1,10 +1,7 @@
 import Erosion from '../utilities/Erosion'
 
-export default class CommandManager {
-    // static #COMMANDS = Object.freeze({
-    //     AIR_STRIKE_COMMAND: 'airstrike.png',
-    // })
-
+export default class CommandManager 
+{
     static #COMMAND_PATTERNS = {
         triangle: 'RZR',
         square: 'B-STRK',

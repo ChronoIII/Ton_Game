@@ -1,23 +1,15 @@
 import Enemy from '../actors/Enemy'
 
-export default class EnemyManager {
+export default class EnemyManager 
+{
     static #instance = null
 
     #scene
     #damage
-    static #enemies = []
+    #enemies = []
     
-    constructor() {
-        if (EnemyManager.#instance) return EnemyManager.#instance
-        EnemyManager.#instance = this
-    }
-
-    changeScene(scene) {
+    constructor(scene) {
         this.#scene = scene
-
-        this.#initialize()
-
-        return this
     }
 
     damageTo(gameObjects) {
@@ -55,26 +47,26 @@ export default class EnemyManager {
             );
         }
 
-        EnemyManager.#enemies.push(...spawnedList)
+        this.#enemies.push(...spawnedList)
 
         return this
     }
 
     outOfBounds(callback = null) {
-        EnemyManager.#enemies.forEach((enemy, index) => {
+        this.#enemies.forEach((enemy, index) => {
             if (enemy.y > this.#scene.cameras.main.height) {
                 console.log('outside detected')
 
                 if (!!callback) callback()
 
-                let _enemies = [...EnemyManager.#enemies]
+                let _enemies = [...this.#enemies]
                 _enemies.splice(index, 1)
-                EnemyManager.#enemies = _enemies
+                this.#enemies = _enemies
             }
         })
     }
 
-    static getEnemyCount () {
+    getEnemyCount () {
         return this.#enemies
     }
 

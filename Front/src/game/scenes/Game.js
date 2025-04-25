@@ -2,11 +2,14 @@ import { Scene, Input } from 'phaser';
 import Drawpad from '../utilities/Drawpad'
 import EnemyManager from '../managers/EnemyManager'
 import CommandManager from '../managers/CommandManager';
+import StateManager from '../managers/StateManager'
 import Recognizer from '../utilities/Recognizer';
 
 export class Game extends Scene
 {
     #enemyManager
+    #stateManager
+    #drawPad
 
     #spawnTimer = 0
     #outOfBoundTimer = 0
@@ -20,16 +23,14 @@ export class Game extends Scene
     #utilities = []
     #canFire = true
     
-    #drawPad
-
     #progressBar
     #progressBox
     #enemyPassed = 0
     #enemyMax = 10
     #enemyProgress = 0.01
     #enemiesPerTick = 5
+    #isGameOver = false
 
-    #razorObjectGroup
     #objectWithActions = {}
     
     constructor ()
@@ -38,9 +39,21 @@ export class Game extends Scene
     }
     
     preload () {
-        this.#enemyManager = new EnemyManager()
-            .changeScene(this)
+        let height = this.cameras.main.height
+        let width = this.cameras.main.width
 
+        this.#stateManager = new StateManager(this)
+        this.#enemyManager = new EnemyManager(this)
+        this.#drawPad = new Drawpad(this)
+
+        this.scene.launch('GameUI', this.#stateManager)
+
+        // Initialize DrawPad
+        this.#drawPad
+            .setPosition(width / 2, height - (128 * 2))
+            .setSize(300, 300)
+
+        // Initialize Cannon Fire Animation
         this.anims.create({
             key: 'fire',
             frames: this.anims.generateFrameNames('basic_turret', {
@@ -49,8 +62,6 @@ export class Game extends Scene
             frameRate: 16,
             repeat: 0,
         });
-
-        this.#drawPad = (new Drawpad(this))
     }
 
     create ()
@@ -65,65 +76,7 @@ export class Game extends Scene
         bg.displayHeight = height
         bg.displayWidth = width * 1.2
 
-        // // Progress Bar
-        // this.#progressBar = this.add.graphics()
-        //     .clear()
-        //     .fillStyle(0xFF0000, 1)
-        //     .fillRect(width - 40, height / 2, 10, 300)
-
-        // // Progress Box
-        // this.#progressBox = this.add.graphics()
-
-        // this.#progressBox
-        //     .clear()
-        //     .fillStyle(0xFFFFFF, 1)
-        //     .fillRect(width - 40, height / 2, 10, 300 * (1.0 - this.#enemyProgress))
-
-        this.#progressBar = this.add.rectangle(width - 10, height / 2, 10, 300, 0xFF0000, 1)
-            .setOrigin(0.5)
-        this.#progressBox = this.add.rectangle(width - 10, height / 2, 10, 300 * (1.0 - (this.#enemyPassed / this.#enemyMax)), 0xFFFFFF, 1)
-
-        // Initialize DrawPad
-        this.#drawPad
-            .setPosition(width / 2, height - (128 * 2))
-            .setSize(300, 300)
-        
-        // Drawpad Button
-        let squareSize = 60
-        let a = this.add.rectangle(width - ((squareSize / 2) + 10), height - ((squareSize / 2) + 8), squareSize + 5, squareSize, 0xFF0000, 0.7)
-            .setInteractive()
-            .on('pointerdown', () => {
-                this.#drawPad.createCanvas()
-                    .on('canvas.panend', (pan, canvas, lastPointer) => {
-                        let points = this.#drawPad.points()
-                        let recognizeData = Recognizer.recogize(points, 3)
-                        
-                        let command = CommandManager.activeCommand(this, recognizeData)
-
-                        if (!!command.action) {
-                            let commandKey = command.action
-                            if (!this.#objectWithActions.hasOwnProperty(commandKey)) this.#objectWithActions[commandKey] = []
-
-                            this.#objectWithActions[commandKey].push(command)
-                        }
-
-                        let commandGameObject = [command.data]
-                        if (command.data instanceof Phaser.GameObjects.Group) {
-                            commandGameObject = command.data.getChildren()
-                        }
-    
-                        this.#utilities.push(...commandGameObject)
-
-                        this.#drawPad.destroy()
-                    })
-            })
-        this.add.text(width - ((squareSize / 2) + 10), height - ((squareSize / 2) + 8), 'HQ', {
-            font: '800 19px arial',
-            fontSize: 18,
-            fontFamily: 'Verdana',
-            letterSpacing: 3,
-        }).setOrigin(0.5).setDepth(100)
-
+        // Player Properties
         this.#player = this.physics.add.sprite(width / 2, height + 30, 'basic_turret')
             .setOrigin(0.5, 1.5)
             .setScale(1)
@@ -140,11 +93,34 @@ export class Game extends Scene
             yoyo: true,
         })
 
-        this.#mouseInputEvents()
+        // HQ Button Listener
+        this.game.scene.getScene('GameUI').events.on('initialize-drawpad-command', () => {
+            this.#drawPad.createCanvas()
+                .on('canvas.panend', (pan, canvas, lastPointer) => {
+                    let points = this.#drawPad.points()
+                    let recognizeData = Recognizer.recogize(points, 3)
+                    
+                    let command = CommandManager.activeCommand(this, recognizeData)
 
-        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, (cam, effect) => {
-            this.scene.start('GameOver')
+                    if (!!command.action) {
+                        let commandKey = command.action
+                        if (!this.#objectWithActions.hasOwnProperty(commandKey)) this.#objectWithActions[commandKey] = []
+
+                        this.#objectWithActions[commandKey].push(command)
+                    }
+
+                    let commandGameObject = [command.data]
+                    if (command.data instanceof Phaser.GameObjects.Group) {
+                        commandGameObject = command.data.getChildren()
+                    }
+
+                    this.#utilities.push(...commandGameObject)
+
+                    this.#drawPad.destroy()
+                })
         })
+
+        this.#mouseInputEvents()
     }
 
     update (time, delta) {
@@ -213,10 +189,11 @@ export class Game extends Scene
             CommandManager.activateActionCommands(this.#objectWithActions)
         }
 
-        // Game Over
-        if (this.#enemyPassed >= this.#enemyMax) {
-            this.scene.stop()
-            this.cameras.main.fadeOut(1000, 0, 0, 0)
+        // Game Over Trigger
+        if (this.#enemyPassed > this.#enemyMax && !this.#isGameOver) {
+            this.#isGameOver = true
+
+            this.scene.launch('GameOver')
         }
     }
 
