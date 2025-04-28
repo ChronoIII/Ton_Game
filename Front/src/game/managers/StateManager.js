@@ -1,6 +1,6 @@
 export default class StateManager 
 {
-    #gameStates = Object.freeze({
+    GameStates = Object.freeze({
         GAME_BEGIN: 'game-begin',
         ROUND_START: 'round-start',
         ROUND_END: 'round-end',
@@ -19,12 +19,12 @@ export default class StateManager
     }
 
     constructor(scene) {
-        this.#currentGameState = this.#gameStates.GAME_BEGIN
+        this.#currentGameState = this.GameStates.GAME_BEGIN
 
         scene.events.on('change-game-state', (state) => {
-            if (!Object.values(this.#gameStates).includes(x => x === state)) return
+            if (!Object.values(this.GameStates).includes(x => x === state)) return
 
-            this.#currentGameState = this.#gameStates
+            this.#currentGameState = this.GameStates[state]
         })
     }
 
@@ -42,13 +42,11 @@ export default class StateManager
         })
     }
 
-    gameState() {
-        let enumGameState = this.#gameStates
-
-        return enumGameState.GAME_BEGIN
+    currentGameState() {
+        return this.#currentGameState
     }
 
-    setGameState() {
-        
+    setGameState(gameState) {
+        this.#currentGameState = gameState
     }
 }

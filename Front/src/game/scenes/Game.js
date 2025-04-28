@@ -1,15 +1,19 @@
-import { Scene, Input } from 'phaser';
+import { Scene, Input } from 'phaser'
 import Drawpad from '../utilities/Drawpad'
 import EnemyManager from '../managers/EnemyManager'
-import CommandManager from '../managers/CommandManager';
+import CommandManager from '../managers/CommandManager'
 import StateManager from '../managers/StateManager'
-import Recognizer from '../utilities/Recognizer';
+import Recognizer from '../utilities/Recognizer'
+import Player from '../actors/Player'
 
 export class Game extends Scene
 {
     #enemyManager
     #stateManager
+    #commandManager
     #drawPad
+    #player
+    #currentGameState = 'game-begin'
 
     #spawnTimer = 0
     #outOfBoundTimer = 0
@@ -18,18 +22,7 @@ export class Game extends Scene
     #roundTimer
     #roundInterval = 30000
 
-    #player = null
-    #barrier = null
     #utilities = []
-    #canFire = true
-    
-    #progressBar
-    #progressBox
-    #enemyPassed = 0
-    #enemyMax = 10
-    #enemyProgress = 0.01
-    #enemiesPerTick = 5
-    #isGameOver = false
 
     #objectWithActions = {}
     
@@ -44,24 +37,16 @@ export class Game extends Scene
 
         this.#stateManager = new StateManager(this)
         this.#enemyManager = new EnemyManager(this)
+        this.#commandManager = new CommandManager()
         this.#drawPad = new Drawpad(this)
+        this.#player = new Player(this, width / 2, height + 30, 'basic_turret', { stateManager: this.#stateManager, drawPad: this.#drawPad }).withBarrier()
 
-        this.scene.launch('GameUI', this.#stateManager)
+        this.scene.launch('GameUI', { stateManager: this.#stateManager })
 
         // Initialize DrawPad
         this.#drawPad
             .setPosition(width / 2, height - (128 * 2))
             .setSize(300, 300)
-
-        // Initialize Cannon Fire Animation
-        this.anims.create({
-            key: 'fire',
-            frames: this.anims.generateFrameNames('basic_turret', {
-                frames: [0, 1, 2, 3, 0],
-            }),
-            frameRate: 16,
-            repeat: 0,
-        });
     }
 
     create ()
@@ -76,31 +61,13 @@ export class Game extends Scene
         bg.displayHeight = height
         bg.displayWidth = width * 1.2
 
-        // Player Properties
-        this.#player = this.physics.add.sprite(width / 2, height + 30, 'basic_turret')
-            .setOrigin(0.5, 1.5)
-            .setScale(1)
-            .setData('posX', width / 2)
-            .setData('posY', height + 30)
-        this.#barrier = this.physics.add.sprite(width / 2, height, 'shield_barrier')
-            .setScale(0.23)
-        this.tweens.add({
-            targets: [this.#barrier],
-            scale: 0.25,
-            ease: 'Linear',
-            duration: 1000,
-            repeat: -1,
-            yoyo: true,
-        })
-
         // HQ Button Listener
         this.game.scene.getScene('GameUI').events.on('initialize-drawpad-command', () => {
             this.#drawPad.createCanvas()
                 .on('canvas.panend', (pan, canvas, lastPointer) => {
                     let points = this.#drawPad.points()
                     let recognizeData = Recognizer.recogize(points, 3)
-                    
-                    let command = CommandManager.activeCommand(this, recognizeData)
+                    let command = this.#commandManager.activeCommand(this, recognizeData)
 
                     if (!!command.action) {
                         let commandKey = command.action
@@ -120,19 +87,21 @@ export class Game extends Scene
                 })
         })
 
-        this.#mouseInputEvents()
+        this.events.on('game-state_bullet-fired', (data) => {
+            this.#utilities.push(data.object)
+        })
     }
 
     update (time, delta) {
-        let height = this.cameras.main.height
-        let width = this.cameras.main.width
-
         // Round raise difficulty
         // Spawn more enemies per tick (+3)
         // Lower spawn interval (-1s)
         this.#roundTimer += delta
         if (this.#roundTimer > this.#roundInterval) {
-            this.#enemiesPerTick += 3
+            this.#stateManager.updateEnemyState({
+                spawnPerTick: this.#stateManager.enemyState().spawnPerTick + 3,
+                spawnInterval: this.#stateManager.enemyState().spawnInterval - 1000,
+            })
             this.#spawnInterval -= 1000
 
             this.#roundTimer = 0
@@ -143,7 +112,7 @@ export class Game extends Scene
         if (this.#spawnTimer > this.#spawnInterval) {
             this.#enemyManager
                 .damageTo(this.#utilities)
-                .spawnEnemiesPerTime(this.#enemiesPerTick)
+                .spawnEnemiesPerTime(this.#stateManager.enemyState().spawnPerTick)
             this.#spawnTimer = 0
         }
 
@@ -152,96 +121,29 @@ export class Game extends Scene
         if (this.#outOfBoundTimer > this.#outOfBoundInternal) {
             this.#enemyManager
                 .outOfBounds(() => {
-                    this.#enemyPassed++
+                    this.#stateManager.setEnemyState({
+                        entry: this.#stateManager.enemyState().entry++
+                    })
 
-                    // Redraw loading bar
-                    this.#progressBox.destroy()
-                    // this.#progressBox = this.add.graphics()
-                    //     .fillStyle(0xFFFFFF, 1)
-                    //     .fillRect(width - 40, height / 2, 10, 300 * Math.max(0.1, (1.0 - (this.#enemyPassed / this.#enemyMax))))
-                    this.#progressBar= this.add.rectangle(width - 10, height / 2, 10, 300 * (1.0 - (this.#enemyPassed / this.#enemyMax)), 0xFFFFFF, 1)
-
-                    let posX = this.#progressBar.x 
-                    this.tweens.add({
-                        targets: [
-                            this.#progressBar,
-                            this.#progressBox,
-                        ],
-                        x: {
-                            from: posX + (Math.random() > 0.5 ? 5 : -5),
-                            to: posX,
-                        },
-                        duration: 100,
-                        repeat: 0,
-                    }) 
+                    this.events.emit('game-state_enemy-passed')
                 })
             this.#outOfBoundTimer = 0
         }
 
-        // Reset recoil knockback (player)
-        if (this.#player.y < this.#player.getData('posY')) {
-            this.#player.body.velocity.y = 0
-            this.#player.y = this.#player.getData('posY')
-        }
-
         // Run Phaser Action methods for command mechanics
         if (Object.keys(this.#objectWithActions).length > 0) {
-            CommandManager.activateActionCommands(this.#objectWithActions)
+            this.#commandManager.activateActionCommands(this.#objectWithActions)
         }
 
         // Game Over Trigger
-        if (this.#enemyPassed > this.#enemyMax && !this.#isGameOver) {
-            this.#isGameOver = true
+        if (this.#currentGameState != this.#stateManager.currentGameState()) {
+            if (this.#stateManager.currentGameState() == this.#stateManager.GameStates.GameOver) {
+                this.scene.launch('GameOver')
+            }
 
-            this.scene.launch('GameOver')
+            this.#currentGameState = this.#stateManager.currentGameState()
         }
-    }
 
-    #mouseInputEvents () {
-        this.input.on('pointerdown', (pointer, object) => {
-            // @TODO: Structure and relocate this catcher
-            if (this.#drawPad.ON_DISPLAY || !this.#canFire) return
-
-            // this.#canFire = false
-
-            let pointerX = pointer.x
-            let pointerY = pointer.y
-
-            let playerX = this.#player.x
-            let playerY = this.#player.y
-
-            let adjacent = playerX - pointerX
-            let opposite = playerY - pointerY
-            // let hypotenuse = Math.sqrt(Math.pow(adjacent, 2) + Math.pow(opposite, 2))
-            let hypotenuse = Math.hypot(adjacent, opposite)
-
-            // @TITLE: Pythagoream
-            // @REFERENCE: https://stackoverflow.com/questions/9705123/how-can-i-get-sin-cos-and-tan-to-use-degrees-instead-of-radians
-            let radian = Math.acos(adjacent / hypotenuse)
-
-            // Animation and rotation
-            this.#player.anims.play('fire', true)
-            this.#player.rotation = radian - Phaser.Math.DegToRad(90)
-
-            // Knockback when fire
-            this.#player.setPosition(this.#player.x, this.#player.y + 8)
-            this.physics.moveTo(this.#player, this.#player.x, this.#player.y - 8, 100)
-
-            // Bullet instantiate
-            this.#bulletFire(this.#player.x, this.#player.y - 32, radian)
-        })
-    }
-
-    #bulletFire (posX, posY, radian) {
-        let velocity = new Phaser.Math.Vector2(1, 1)
-            .setAngle(radian)
-            .setLength(1500)
-
-        this.#utilities.push(
-            this.physics.add.sprite(posX, posY, 'basic_bullet')
-                .setVelocity(-velocity.x, -velocity.y)
-                .setScale(2, 2)
-                .setData('durability', 1)
-        )
+        this.events.emit('game-trigger_update', { time, delta })
     }
 }

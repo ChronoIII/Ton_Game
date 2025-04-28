@@ -10,6 +10,8 @@ export default class EnemyManager
     
     constructor(scene) {
         this.#scene = scene
+
+        this.#initialize()
     }
 
     damageTo(gameObjects) {

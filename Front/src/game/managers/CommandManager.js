@@ -2,13 +2,13 @@ import Erosion from '../utilities/Erosion'
 
 export default class CommandManager 
 {
-    static #COMMAND_PATTERNS = {
+    #COMMAND_PATTERNS = {
         triangle: 'RZR',
         square: 'B-STRK',
         rectangle: 'B-STRK',
     }
 
-    static activeCommand(scene, gesture) {
+    activeCommand(scene, gesture) {
         let commandGesture = this.#COMMAND_PATTERNS[gesture]
         switch (commandGesture) {
             case 'RZR':
@@ -48,7 +48,7 @@ export default class CommandManager
         }
     }
 
-    static activateActionCommands(actions) {
+    activateActionCommands(actions) {
         Object.keys(actions).forEach(actionKey => {
             let actionObject = actions[actionKey]
             switch (actionKey) {
