@@ -57,6 +57,8 @@ export default class CommandManager
                         let indexActionObject = actionObject[i]
                         let gameObject = indexActionObject.data
                         let config = indexActionObject.config
+
+                        console.log((gameObject))
                         Phaser.Actions.RotateAround(gameObject, { x: config.x, y: config.y }, config.radian)
                     }
             }

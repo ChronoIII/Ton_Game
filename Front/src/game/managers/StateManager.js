@@ -3,11 +3,10 @@ export default class StateManager
     GameStates = Object.freeze({
         GAME_BEGIN: 'game-begin',
         ROUND_START: 'round-start',
+        GAME_PAUSED: 'game-paused',
         ROUND_END: 'round-end',
         GAME_OVER: 'game-over',
     })
-
-    #waveLevel = 1
 
     #currentGameState = null
 
@@ -16,6 +15,11 @@ export default class StateManager
         maxEntry: 20,
         spawnPerTick: 5,
         spawnInterval: 5000,
+    }
+
+    #roundState = {
+        interval: 30000,
+        wave: 1,
     }
 
     constructor(scene) {
@@ -48,5 +52,19 @@ export default class StateManager
 
     setGameState(gameState) {
         this.#currentGameState = gameState
+    }
+
+    roundState() {
+        return this.#roundState
+    }
+
+    setRoundState(data) {
+        if (!data instanceof 'object') return
+
+        Object.keys(this.#roundState).forEach((keyState) => {``
+            if (data[keyState]) {
+                this.#roundState[keyState] = data[keyState]
+            }
+        })
     }
 }

@@ -93,16 +93,31 @@ export class Game extends Scene
     }
 
     update (time, delta) {
+        this.events.emit('[player]game-trigger_update', { time, delta })
+
+        if (this.#stateManager.currentGameState() != this.#stateManager.GameStates.ROUND_BEGIN) {
+            // Starting game will spawn ememies immediately
+            this.#spawnTimer = this.#spawnInterval / 2
+
+            return
+        }
+
         // Round raise difficulty
         // Spawn more enemies per tick (+3)
         // Lower spawn interval (-1s)
         this.#roundTimer += delta
-        if (this.#roundTimer > this.#roundInterval) {
+        if (this.#roundTimer > this.#stateManager.roundState().interval) {
+            this.#stateManager.setGameState(this.#stateManager.GameStates.ROUND_END)
+
             this.#stateManager.updateEnemyState({
                 spawnPerTick: this.#stateManager.enemyState().spawnPerTick + 3,
                 spawnInterval: this.#stateManager.enemyState().spawnInterval - 1000,
             })
-            this.#spawnInterval -= 1000
+
+            this.#stateManager.setRoundState({
+                wave: this.#stateManager.roundState().wave++,
+                // interval: this.#stateManager.roundState().interval + 5000
+            })
 
             this.#roundTimer = 0
         }
@@ -113,6 +128,7 @@ export class Game extends Scene
             this.#enemyManager
                 .damageTo(this.#utilities)
                 .spawnEnemiesPerTime(this.#stateManager.enemyState().spawnPerTick)
+
             this.#spawnTimer = 0
         }
 
@@ -121,7 +137,7 @@ export class Game extends Scene
         if (this.#outOfBoundTimer > this.#outOfBoundInternal) {
             this.#enemyManager
                 .outOfBounds(() => {
-                    this.#stateManager.setEnemyState({
+                    this.#stateManager.updateEnemyState({
                         entry: this.#stateManager.enemyState().entry++
                     })
 
@@ -137,7 +153,7 @@ export class Game extends Scene
 
         // Game Over Trigger
         if (this.#currentGameState != this.#stateManager.currentGameState()) {
-            if (this.#stateManager.currentGameState() == this.#stateManager.GameStates.GameOver) {
+            if (this.#stateManager.currentGameState() == this.#stateManager.GameStates.GAME_OVER) {
                 this.scene.launch('GameOver')
             }
 

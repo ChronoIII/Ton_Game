@@ -19,6 +19,11 @@ export class GameUI extends Scene
     }
 
     create() {
+        this.#displayInvasionProgressBar()
+        this.#showWaveLevelText("Survive")
+    }
+
+    #displayInvasionProgressBar() {
         let height = this.cameras.main.height
         let width = this.cameras.main.width
 
@@ -51,6 +56,52 @@ export class GameUI extends Scene
             this.#progress.bar.destroy()
             this.#progress.bar = this.add.rectangle(this.#progress.posX, this.#progress.posY, 10, 300 * invasionProgress, 0xFF0000, 1)
                 .setOrigin(0.5, 1)
+
+            this.tweens.add({
+                targets: [this.#progress.bar, this.#progress.box],
+                alpha: 0,
+                x: {
+                    from: this.#progress.posX + 5,
+                    to: this.#progress.posX - 5,
+                },
+                duration: 100,
+                repeat: -1,
+                yoyo: true,
+            })
         })
     }
+
+    #showWaveLevelText(text) {
+        let height = this.cameras.main.height
+        let width = this.cameras.main.width
+
+        let objectiveLabelText = this.add.text(width / 2, height * 0.2, 'Objective:', {
+            font: '600 19px arial',
+            fontFamily: 'Verdana',
+            letterSpacing: 1,
+            color: '#FFF',
+            align: 'center',
+        }).setOrigin(0.5).setDepth(100)
+
+        let objectiveValueText = this.add.text(width / 2, height * 0.24, text, {
+            font: '800 25px arial',
+            fontFamily: 'Verdana',
+            letterSpacing: 2,
+            color: '#F00',
+            align: 'center',
+        }).setOrigin(0.5).setDepth(100)
+
+        setTimeout(() => {
+            this.tweens.add({
+                targets: [objectiveLabelText, objectiveValueText],
+                alpha: 0,
+                duration: 2000,
+                repeat: 0,
+                onComplete: () => {
+                    this.#stateManager.setGameState(this.#stateManager.GameStates.ROUND_BEGIN)
+                }
+            })
+        }, 3000)
+    }
+
 }
