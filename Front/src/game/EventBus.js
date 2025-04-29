@@ -5,5 +5,5 @@ import Phaser from 'phaser';
 export const EventBus = new Phaser.Events.EventEmitter();
 
 EventBus.addListener('current-scene-ready', function() {
-    alert('test')
+    
 })

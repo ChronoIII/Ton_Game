@@ -20,7 +20,6 @@ export class Game extends Scene
     #spawnInterval = 5000
     #outOfBoundInternal = 1000
     #roundTimer
-    #roundInterval = 30000
 
     #utilities = []
 
@@ -61,35 +60,7 @@ export class Game extends Scene
         bg.displayHeight = height
         bg.displayWidth = width * 1.2
 
-        // HQ Button Listener
-        this.game.scene.getScene('GameUI').events.on('initialize-drawpad-command', () => {
-            this.#drawPad.createCanvas()
-                .on('canvas.panend', (pan, canvas, lastPointer) => {
-                    let points = this.#drawPad.points()
-                    let recognizeData = Recognizer.recogize(points, 3)
-                    let command = this.#commandManager.activeCommand(this, recognizeData)
-
-                    if (!!command.action) {
-                        let commandKey = command.action
-                        if (!this.#objectWithActions.hasOwnProperty(commandKey)) this.#objectWithActions[commandKey] = []
-
-                        this.#objectWithActions[commandKey].push(command)
-                    }
-
-                    let commandGameObject = [command.data]
-                    if (command.data instanceof Phaser.GameObjects.Group) {
-                        commandGameObject = command.data.getChildren()
-                    }
-
-                    this.#utilities.push(...commandGameObject)
-
-                    this.#drawPad.destroy()
-                })
-        })
-
-        this.events.on('game-state_bullet-fired', (data) => {
-            this.#utilities.push(data.object)
-        })
+        this.#eventListeners()
     }
 
     update (time, delta) {
@@ -148,7 +119,7 @@ export class Game extends Scene
 
         // Run Phaser Action methods for command mechanics
         if (Object.keys(this.#objectWithActions).length > 0) {
-            this.#commandManager.activateActionCommands(this.#objectWithActions)
+            this.#commandManager.animateCommands(this.#objectWithActions)
         }
 
         // Game Over Trigger
@@ -161,5 +132,53 @@ export class Game extends Scene
         }
 
         this.events.emit('game-trigger_update', { time, delta })
+    }
+
+    #eventListeners() {
+        // HQ Button Listener
+        this.game.scene.getScene('GameUI').events.on('initialize-drawpad-command', () => {
+            this.#drawPad.createCanvas()
+                .on('canvas.panend', (pan, canvas, lastPointer) => {
+                    let points = this.#drawPad.points()
+                    let recognizeData = Recognizer.recogize(points, 3)
+                    let command = this.#commandManager.activeCommand(this, recognizeData)
+
+                    if (!!command.action) {
+                        let commandKey = command.action
+                        if (!this.#objectWithActions.hasOwnProperty(commandKey)) this.#objectWithActions[commandKey] = []
+
+                        this.#objectWithActions[commandKey].push(command)
+                    }
+
+                    let commandGameObject = [command.data]
+                    if (command.data instanceof Phaser.GameObjects.Group) {
+                        commandGameObject = command.data.getChildren()
+                    }
+
+                    this.#utilities.push(...commandGameObject)
+
+                    this.#drawPad.destroy()
+                })
+        })
+
+        // Player Cannon Fired
+        this.events.on('game-state_bullet-fired', (data) => {
+            this.#utilities.push(data.object)
+        })
+
+        // Enemy get Damaged
+        this.events.on('[enemy]game-status_damage', (data) => {
+            console.log(data)
+        })
+
+        // Enemy Destroyed
+        this.events.on('[eneny]game-status_destroy', (data) => {
+            let playerCurrentState = this.#stateManager.playerState()
+            let enemyDrop = data.drop
+
+            this.#stateManager.updatePlayerState({
+                coin: playerCurrentState.coin + enemyDrop.coin
+            })
+        })
     }
 }

@@ -1,5 +1,7 @@
 export default class StateManager 
 {
+    #scene
+
     GameStates = Object.freeze({
         GAME_BEGIN: 'game-begin',
         ROUND_START: 'round-start',
@@ -9,6 +11,15 @@ export default class StateManager
     })
 
     #currentGameState = null
+
+    #playerState = {
+        coin: 0,
+        upgrades: [],
+        commands: [
+            'RZR',
+            'B-STRK'
+        ],
+    }
 
     #enemyState = {
         entry: 0,
@@ -23,6 +34,8 @@ export default class StateManager
     }
 
     constructor(scene) {
+        this.#scene = scene
+
         this.#currentGameState = this.GameStates.GAME_BEGIN
 
         scene.events.on('change-game-state', (state) => {
@@ -32,13 +45,25 @@ export default class StateManager
         })
     }
 
+    playerState() {
+        return this.#playerState
+    }
+
+    updatePlayerState(data) {
+        Object.keys(this.#playerState).forEach((keyState) => {
+            if (data[keyState]) {
+                this.#playerState[keyState] = data[keyState]
+            }
+        })
+
+        this.#scene.events.emit('[stateManager]game-status_state-update')
+    }
+
     enemyState() {
         return this.#enemyState
     }
 
     updateEnemyState(data) {
-        if (!data instanceof 'object') return
-
         Object.keys(this.#enemyState).forEach((keyState) => {
             if (data[keyState]) {
                 this.#enemyState[keyState] = data[keyState]
@@ -59,9 +84,7 @@ export default class StateManager
     }
 
     setRoundState(data) {
-        if (!data instanceof 'object') return
-
-        Object.keys(this.#roundState).forEach((keyState) => {``
+        Object.keys(this.#roundState).forEach((keyState) => {
             if (data[keyState]) {
                 this.#roundState[keyState] = data[keyState]
             }

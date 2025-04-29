@@ -14,7 +14,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite
         this.#spawn()
     }
 
-    damage(gameObject, callback = null) {
+    damage(gameObject) {
         this.#scene.physics.add.overlap(this, gameObject, (current, other) => {
             if (current.getData('invincible')) {
                 return;
@@ -53,12 +53,16 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite
                 yoyo: true,
             })
 
+            this.#scene.events.emit('[enemy]game-status_damage', { current, other })
+
             if (current.getData('health') <= 0) {
+                let drop = current.#drop()
+                this.#scene.events.emit('[eneny]game-status_destroy', { current, other, drop })
+
                 let posX = current.x
                 let posY = current.y
-
+                
                 current.destroy()
-
                 let destroyParticle = this.#scene.physics.add.sprite(posX, posY, 'destroy_particles')
                     .setScale(1.1)
                     .anims.play('destroyed')
@@ -68,11 +72,26 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite
                     this.destroy()
                 }, this)
             }
-
-            if (callback !== null) callback()
         })
 
         return this
+    }
+
+    #drop() {
+        let coinDrop
+
+        let minimumCoinDrop = 10
+        let maximumCoinDrop = 30
+        
+        coinDrop = minimumCoinDrop
+        if (Math.random() >= 0.8) {
+            let criticalCoinDrop = (Math.random() * maximumCoinDrop) + minimumCoinDrop
+            coinDrop = criticalCoinDrop
+        }
+
+        return {
+            coin: coinDrop
+        }
     }
 
     #spawn() {

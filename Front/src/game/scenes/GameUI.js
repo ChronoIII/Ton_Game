@@ -21,6 +21,7 @@ export class GameUI extends Scene
     create() {
         this.#displayInvasionProgressBar()
         this.#showWaveLevelText("Survive")
+        this.#coinDisplay()
     }
 
     #displayInvasionProgressBar() {
@@ -75,7 +76,7 @@ export class GameUI extends Scene
         let height = this.cameras.main.height
         let width = this.cameras.main.width
 
-        let objectiveLabelText = this.add.text(width / 2, height * 0.2, 'Objective:', {
+        let objectiveLabelText = this.add.text(width / 2, height * 0.2, 'Objective updated:', {
             font: '600 19px arial',
             fontFamily: 'Verdana',
             letterSpacing: 1,
@@ -99,9 +100,29 @@ export class GameUI extends Scene
                 repeat: 0,
                 onComplete: () => {
                     this.#stateManager.setGameState(this.#stateManager.GameStates.ROUND_BEGIN)
+
+                    objectiveLabelText.destroy()
+                    objectiveValueText.destroy()
                 }
             })
         }, 3000)
+    }
+
+    #coinDisplay() {
+        let labelPosX = 10
+        let labelPosY = 20
+
+        let coinLabelDisplay = this.add.text(labelPosX, labelPosY, '0', {
+            color: '#fff',
+            font: '400 20px arial',
+        }).setOrigin(0, 0.5)
+
+        // Player State Update (coins, commands, upgrades)
+        this.game.scene.getScene('Game').events.on('[stateManager]game-status_state-update', () => {
+            let playerCurrentState = this.#stateManager.playerState()
+
+            coinLabelDisplay.setText(playerCurrentState.coin)
+        })
     }
 
 }

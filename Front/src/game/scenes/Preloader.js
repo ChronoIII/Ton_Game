@@ -45,6 +45,7 @@ export class Preloader extends Scene
         this.load.image('basic_bullet', 'bullets/BALLA0.png')
         this.load.image('shield_barrier', 'barrier/spr_shield.png')
         this.load.image('background', 'ui/back2.png')
+        this.load.image('background_menu', 'bg.png')
 
         this.load.image('bar_command', 'commands/bar.png')
         this.load.image('razor_command', 'commands/razor.png')
@@ -56,6 +57,6 @@ export class Preloader extends Scene
         //  For example, you can define global animations here, so we can use them in other scenes.
 
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
-        this.scene.start('Game')
+        this.scene.start('MainMenu')
     }
 }

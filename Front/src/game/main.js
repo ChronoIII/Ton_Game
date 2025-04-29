@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Preloader } from './scenes/Preloader';
+import { MainMenu } from './scenes/MainMenu'
 import { Game } from './scenes/Game';
 import { GameOver } from './scenes/GameOver'
 import { GameUI } from './scenes/GameUI'
@@ -14,6 +15,7 @@ const config = {
     backgroundColor: '#028af8',
     scene: [
         Preloader,
+        MainMenu,
         Game,
         GameOver,
         GameUI,

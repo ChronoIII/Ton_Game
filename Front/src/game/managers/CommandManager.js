@@ -48,7 +48,7 @@ export default class CommandManager
         }
     }
 
-    activateActionCommands(actions) {
+    animateCommands(actions) {
         Object.keys(actions).forEach(actionKey => {
             let actionObject = actions[actionKey]
             switch (actionKey) {
@@ -57,8 +57,7 @@ export default class CommandManager
                         let indexActionObject = actionObject[i]
                         let gameObject = indexActionObject.data
                         let config = indexActionObject.config
-
-                        console.log((gameObject))
+                        
                         Phaser.Actions.RotateAround(gameObject, { x: config.x, y: config.y }, config.radian)
                     }
             }
