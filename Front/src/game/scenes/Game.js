@@ -77,7 +77,8 @@ export class Game extends Scene
         // Spawn more enemies per tick (+3)
         // Lower spawn interval (-1s)
         this.#roundTimer += delta
-        if (this.#roundTimer > this.#stateManager.roundState().interval) {
+        console.log('Enemy left:', this.#enemyManager.getEnemies())
+        if (this.#roundTimer > this.#stateManager.roundState().interval && this.#enemyManager.isEnemyListEmpty()) {
             this.#stateManager.setGameState(this.#stateManager.GameStates.ROUND_END)
 
             this.#stateManager.updateEnemyState({

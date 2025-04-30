@@ -25,7 +25,7 @@ export class MainMenu extends Scene
     }
 
     #displayTitle(titlePosX, titlePosY) {
-        this.add.text(titlePosX, titlePosY, "1st Battalion\nCannon", {
+        let title = this.add.text(titlePosX, titlePosY, "1st Battalion\nCannon", {
             fontSize: 38,
             fontFamily: 'Arial Black',
             align: 'center',
@@ -33,25 +33,75 @@ export class MainMenu extends Scene
             stroke: '#000000',
             strokeThickness: 8,
         }).setOrigin(0.5).setDepth(100)
+
+        this.tweens.add({
+            targets: [title],
+            y: {
+                from: titlePosY + 5,
+                to: titlePosY - 5,
+            },
+            // ease: 'Back.easeInOut',
+            repeat: -1,
+            duration: 1000,
+            yoyo: true,
+        })
     }
 
     #displayMenuButton() {
-        this.add.text(50, this.#canvasHeight * 0.8, 'Lets roll', {
-            fontSize: 25,
-            fontFamily: 'Arial Black',
-            color: '#fff',
-            stroke: '#000000',
-            strokeThickness: 8,
-        })
+        let start_bg = this.add.graphics()
+            .fillStyle(0x5555AA, 0.9)
+            .fillRoundedRect(30, this.#canvasHeight * 0.775, 160, 60)
+            .setDepth(80)
+        let start_bg2 = this.add.graphics()
+            .fillStyle(0x5555AA, 1)
+            .fillRoundedRect(30, this.#canvasHeight * 0.775, 160, 50)
+            .setDepth(80)
+        let start_label = this.add.text(110, this.#canvasHeight * 0.8, 'Lets roll', {
+                fontSize: 25,
+                fontFamily: 'Arial Black',
+                color: '#fff',
+                stroke: '#000000',
+                strokeThickness: 8,
+            })
+            .setDepth(100)
+            .setOrigin(0.5)
+            .setInteractive()
+            .on('pointerdown', () => {
+                start_label.setPosition(110, this.#canvasHeight * 0.805)
+                start_bg2.setPosition(30, this.#canvasHeight * 0.78)
+            })
+            .on('pointerup', () => {
+                start_label.setPosition(110, this.#canvasHeight * 0.805)
+                start_bg2.setPosition(30, this.#canvasHeight * 0.78)
 
-        this.add.graphics().fillRoundedRect(0, this.#canvasHeight * 0.8, 100, 100, 100)
+                this.scene.start('Game')
+            })
 
-        this.add.text(50, this.#canvasHeight * 0.88, 'Upgrades', {
-            fontSize: 25,
-            fontFamily: 'Arial Black',
-            color: '#fff',
-            stroke: '#000000',
-            strokeThickness: 8,
-        })
+        let upgrade_bg = this.add.graphics()
+            .fillStyle(0x5555AA, 0.9)
+            .fillRoundedRect(30, this.#canvasHeight * 0.895, 160, 60)
+            .setDepth(80)
+        let upgrade_bg2 = this.add.graphics()
+            .fillStyle(0x5555AA, 1)
+            .fillRoundedRect(30, this.#canvasHeight * 0.895, 160, 50)
+            .setDepth(80)
+        let upgrade_label = this.add.text(110, this.#canvasHeight * 0.92, 'Upgrades', {
+                fontSize: 25,
+                fontFamily: 'Arial Black',
+                color: '#fff',
+                stroke: '#000000',
+                strokeThickness: 8,
+            })
+            .setDepth(100)
+            .setOrigin(0.5)
+            .setInteractive()
+            .on('pointerdown', () => {
+                upgrade_label.setPosition(110, this.#canvasHeight * 0.925)
+                upgrade_bg2.setPosition(30, this.#canvasHeight * 0.925)
+            })
+            .on('pointerup', () => {
+                upgrade_label.setPosition(110, this.#canvasHeight * 0.92)
+                upgrade_bg2.setPosition(30, this.#canvasHeight * 0.92)
+            })
     }
 }

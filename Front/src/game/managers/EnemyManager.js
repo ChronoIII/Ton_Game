@@ -68,8 +68,12 @@ export default class EnemyManager
         })
     }
 
-    getEnemyCount () {
+    getEnemies() {
         return this.#enemies
+    }
+
+    isEnemyListEmpty() {
+        return this.#enemies.length <= 0
     }
 
     #initialize() {
