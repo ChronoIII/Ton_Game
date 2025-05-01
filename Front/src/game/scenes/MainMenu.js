@@ -48,13 +48,13 @@ export class MainMenu extends Scene
     }
 
     #displayMenuButton() {
-        let start_bg = this.add.graphics()
-            .fillStyle(0x5555AA, 0.9)
-            .fillRoundedRect(30, this.#canvasHeight * 0.775, 160, 60)
-            .setDepth(80)
+        // let start_bg = this.add.graphics()
+        //     .fillStyle(0x5555AA, 0.9)
+        //     .fillRoundedRect(30, this.#canvasHeight * 0.775, 160, 60)
+        //     .setDepth(80)
         let start_bg2 = this.add.graphics()
             .fillStyle(0x5555AA, 1)
-            .fillRoundedRect(30, this.#canvasHeight * 0.775, 160, 50)
+            .fillRoundedRect(30, this.#canvasHeight * 0.775, 160, 55)
             .setDepth(80)
         let start_label = this.add.text(110, this.#canvasHeight * 0.8, 'Lets roll', {
                 fontSize: 25,
@@ -68,22 +68,22 @@ export class MainMenu extends Scene
             .setInteractive()
             .on('pointerdown', () => {
                 start_label.setPosition(110, this.#canvasHeight * 0.805)
-                start_bg2.setPosition(30, this.#canvasHeight * 0.78)
+                // start_bg2.setPosition(30, this.#canvasHeight * 0.78)
             })
             .on('pointerup', () => {
                 start_label.setPosition(110, this.#canvasHeight * 0.805)
-                start_bg2.setPosition(30, this.#canvasHeight * 0.78)
+                // start_bg2.setPosition(30, this.#canvasHeight * 0.78)
 
                 this.scene.start('Game')
             })
 
-        let upgrade_bg = this.add.graphics()
-            .fillStyle(0x5555AA, 0.9)
-            .fillRoundedRect(30, this.#canvasHeight * 0.895, 160, 60)
-            .setDepth(80)
+        // let upgrade_bg = this.add.graphics()
+        //     .fillStyle(0x5555AA, 0.9)
+        //     .fillRoundedRect(30, this.#canvasHeight * 0.895, 160, 60)
+        //     .setDepth(80)
         let upgrade_bg2 = this.add.graphics()
             .fillStyle(0x5555AA, 1)
-            .fillRoundedRect(30, this.#canvasHeight * 0.895, 160, 50)
+            .fillRoundedRect(30, this.#canvasHeight * 0.895, 160, 55)
             .setDepth(80)
         let upgrade_label = this.add.text(110, this.#canvasHeight * 0.92, 'Upgrades', {
                 fontSize: 25,
@@ -97,11 +97,11 @@ export class MainMenu extends Scene
             .setInteractive()
             .on('pointerdown', () => {
                 upgrade_label.setPosition(110, this.#canvasHeight * 0.925)
-                upgrade_bg2.setPosition(30, this.#canvasHeight * 0.925)
+                // upgrade_bg2.setPosition(30, this.#canvasHeight * 0.925)
             })
             .on('pointerup', () => {
                 upgrade_label.setPosition(110, this.#canvasHeight * 0.92)
-                upgrade_bg2.setPosition(30, this.#canvasHeight * 0.92)
+                // upgrade_bg2.setPosition(30, this.#canvasHeight * 0.92)
             })
     }
 }

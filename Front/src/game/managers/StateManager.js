@@ -29,6 +29,7 @@ export default class StateManager
     }
 
     #roundState = {
+        remainingSec: 30000,
         interval: 30000,
         wave: 1,
     }
@@ -56,7 +57,7 @@ export default class StateManager
             }
         })
 
-        this.#scene.events.emit('[stateManager]game-status_state-update')
+        this.#scene.events.emit('[stateManager]game-status_player-update')
     }
 
     enemyState() {
@@ -89,5 +90,7 @@ export default class StateManager
                 this.#roundState[keyState] = data[keyState]
             }
         })
+
+        this.#scene.events.emit('[stateManager]game-status_round-update')
     }
 }

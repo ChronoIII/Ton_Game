@@ -8,6 +8,10 @@ export default class CommandManager
         rectangle: 'B-STRK',
     }
 
+    constructor() {
+        
+    }
+
     activeCommand(scene, gesture) {
         let commandGesture = this.#COMMAND_PATTERNS[gesture]
         switch (commandGesture) {

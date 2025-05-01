@@ -57,8 +57,6 @@ export default class EnemyManager
     outOfBounds(callback = null) {
         this.#enemies.forEach((enemy, index) => {
             if (enemy.y > this.#scene.cameras.main.height) {
-                console.log('outside detected')
-
                 if (!!callback) callback()
 
                 let _enemies = [...this.#enemies]

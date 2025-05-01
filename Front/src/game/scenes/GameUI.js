@@ -10,6 +10,8 @@ export class GameUI extends Scene
         posY: 0,
     }
 
+    #displayWaveTrigger = false
+
     constructor() {
         super('GameUI')
     }
@@ -20,8 +22,17 @@ export class GameUI extends Scene
 
     create() {
         this.#displayInvasionProgressBar()
-        this.#showWaveLevelText("Survive")
+        // this.#showWaveLevelText("Survive")
+
         this.#coinDisplay()
+        this.#intervalDisplay()
+    }
+
+    update() {
+        if ([this.#stateManager.GameStates.GAME_BEGIN, this.#stateManager.GameStates.ROUND_END].includes(this.#stateManager.currentGameState()) && !this.#displayWaveTrigger) {
+            this.#displayWaveTrigger = true
+            this.#showWaveLevelText("Survive")
+        }
     }
 
     #displayInvasionProgressBar() {
@@ -93,7 +104,7 @@ export class GameUI extends Scene
         }).setOrigin(0.5).setDepth(100)
 
         setTimeout(() => {
-            this.tweens.add({
+            let tween = this.tweens.add({
                 targets: [objectiveLabelText, objectiveValueText],
                 alpha: 0,
                 duration: 2000,
@@ -103,6 +114,10 @@ export class GameUI extends Scene
 
                     objectiveLabelText.destroy()
                     objectiveValueText.destroy()
+
+                    this.#displayWaveTrigger = false
+                    
+                    tween.destroy()
                 }
             })
         }, 3000)
@@ -118,10 +133,27 @@ export class GameUI extends Scene
         }).setOrigin(0, 0.5)
 
         // Player State Update (coins, commands, upgrades)
-        this.game.scene.getScene('Game').events.on('[stateManager]game-status_state-update', () => {
+        this.game.scene.getScene('Game').events.on('[stateManager]game-status_player-update', () => {
             let playerCurrentState = this.#stateManager.playerState()
 
             coinLabelDisplay.setText(playerCurrentState.coin)
+        })
+    }
+
+    #intervalDisplay() {
+        let labelPosX = this.cameras.main.width - 10
+        let labelPosY = 20
+
+        let roundIntervalCounter = this.add.text(labelPosX, labelPosY, this.#stateManager.roundState().remainingSec * 0.001, {
+            color: '#fff',
+            font: '400 20px arial',
+        }).setOrigin(1, 0.5)
+
+        // Round State Update (interval, wave level, remainingSec)
+        this.game.scene.getScene('Game').events.on('[stateManager]game-status_round-update', () => {
+            let roundCurrentState = this.#stateManager.roundState()
+
+            roundIntervalCounter.setText(Math.floor(roundCurrentState.remainingSec * 0.001))
         })
     }
 

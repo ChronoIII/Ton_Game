@@ -24,6 +24,8 @@ export class Game extends Scene
     #utilities = []
 
     #objectWithActions = {}
+
+    #test = 0
     
     constructor ()
     {
@@ -46,6 +48,10 @@ export class Game extends Scene
         this.#drawPad
             .setPosition(width / 2, height - (128 * 2))
             .setSize(300, 300)
+
+        this.#stateManager.setRoundState({
+            remainingSec: this.#stateManager.roundState().interval
+        })
     }
 
     create ()
@@ -64,6 +70,8 @@ export class Game extends Scene
     }
 
     update (time, delta) {
+        let seconds = time * 0.001
+
         this.events.emit('[player]game-trigger_update', { time, delta })
 
         if (this.#stateManager.currentGameState() != this.#stateManager.GameStates.ROUND_BEGIN) {
@@ -76,9 +84,7 @@ export class Game extends Scene
         // Round raise difficulty
         // Spawn more enemies per tick (+3)
         // Lower spawn interval (-1s)
-        this.#roundTimer += delta
-        console.log('Enemy left:', this.#enemyManager.getEnemies())
-        if (this.#roundTimer > this.#stateManager.roundState().interval && this.#enemyManager.isEnemyListEmpty()) {
+        if (this.#stateManager.roundState.remainingSec <= 0 && this.#enemyManager.isEnemyListEmpty()) {
             this.#stateManager.setGameState(this.#stateManager.GameStates.ROUND_END)
 
             this.#stateManager.updateEnemyState({
@@ -88,10 +94,9 @@ export class Game extends Scene
 
             this.#stateManager.setRoundState({
                 wave: this.#stateManager.roundState().wave++,
-                // interval: this.#stateManager.roundState().interval + 5000
+                interval: this.#stateManager.roundState().interval + 5000,
+                remainingSec: this.#stateManager.roundState().interval + 5000,
             })
-
-            this.#roundTimer = 0
         }
 
         // Enemy Spawner timer
@@ -132,6 +137,13 @@ export class Game extends Scene
             this.#currentGameState = this.#stateManager.currentGameState()
         }
 
+        // Updates remaining seconds every wave level
+        if (this.#stateManager.roundState().remainingSec > 0) {
+            this.#stateManager.setRoundState({
+                remainingSec: (this.#stateManager.roundState().remainingSec - Math.round(seconds))
+            })
+        }
+        
         this.events.emit('game-trigger_update', { time, delta })
     }
 
