@@ -29,8 +29,8 @@ export default class StateManager
     }
 
     #roundState = {
-        remainingSec: 30000,
-        interval: 30000,
+        remainingSec: 5000,
+        interval: 5000,
         wave: 1,
     }
 
@@ -57,7 +57,7 @@ export default class StateManager
             }
         })
 
-        this.#scene.events.emit('[stateManager]game-status_player-update')
+        this.#scene.events.emit('[stateManager]game-status_player-update', this.#playerState)
     }
 
     enemyState() {
@@ -70,6 +70,8 @@ export default class StateManager
                 this.#enemyState[keyState] = data[keyState]
             }
         })
+
+        this.#scene.events.emit('[stateManager]game-enemy-update', this.#playerState)
     }
 
     currentGameState() {
@@ -78,6 +80,8 @@ export default class StateManager
 
     setGameState(gameState) {
         this.#currentGameState = gameState
+
+        this.#scene.events.emit('[stateManager]game-status_game-update', this.#currentGameState)
     }
 
     roundState() {
@@ -91,6 +95,6 @@ export default class StateManager
             }
         })
 
-        this.#scene.events.emit('[stateManager]game-status_round-update')
+        this.#scene.events.emit('[stateManager]game-status_round-update', this.#roundState)
     }
 }

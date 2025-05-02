@@ -24,11 +24,14 @@ export default class EnemyManager
 
         let spawnCount = Math.floor((Math.random() * count) + 1)
         let spawnedList = []
+
+        // Spawn enemy based on spawnCount
         for (let i = 1; i <= spawnCount; i++) {
             let randomPosX
             let checker = true
             let stepper = 0
 
+            // Relocate enemy when overlapped on other
             while (checker) {
                 randomPosX = Math.random() * (0, width)
 
@@ -40,25 +43,36 @@ export default class EnemyManager
                 if (stepper >= 2) break
             }
 
+            // If relocating failed 3 times, ignore it
             if (checker) continue
 
             let randomPosY = Math.floor((Math.random() * 50))
             spawnedList.push(
                 new Enemy(this.#scene, randomPosX, randomPosY, 'hopp')
                     .damage(this.#damage)
-            );
+            )
         }
 
+        // Push to enemy list for lookup
         this.#enemies.push(...spawnedList)
 
         return this
     }
 
-    outOfBounds(callback = null) {
-        this.#enemies.forEach((enemy, index) => {
-            if (enemy.y > this.#scene.cameras.main.height) {
-                if (!!callback) callback()
+    enemyOutOrDead({ enemyOut = null, enemyDead = null }) {
+        console.log(this.#enemies)
 
+        this.#enemies.forEach((enemy, index) => {
+            let a, b
+            if ((a = enemy.y > this.#scene.cameras.main.height) || (b = enemy.getData('health') <= 0)) {
+
+                if (a && !!enemyOut) {
+                    enemyOut(enemy)
+                } else if (b && !!enemyDead) {
+                    enemyDead(enemy)
+                }
+
+                console.log('Enemy: ', index, a, b)
                 let _enemies = [...this.#enemies]
                 _enemies.splice(index, 1)
                 this.#enemies = _enemies
@@ -70,7 +84,7 @@ export default class EnemyManager
         return this.#enemies
     }
 
-    isEnemyListEmpty() {
+    isWaveCleared() {
         return this.#enemies.length <= 0
     }
 

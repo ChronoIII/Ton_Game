@@ -85,7 +85,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite
         
         coinDrop = minimumCoinDrop
         if (Math.random() >= 0.8) {
-            let criticalCoinDrop = (Math.random() * maximumCoinDrop) + minimumCoinDrop
+            let criticalCoinDrop = Math.round((Math.random() * maximumCoinDrop) + minimumCoinDrop)
             coinDrop = criticalCoinDrop
         }
 

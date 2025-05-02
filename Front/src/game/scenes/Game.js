@@ -14,6 +14,7 @@ export class Game extends Scene
     #drawPad
     #player
     #currentGameState = 'game-begin'
+    #isEnemySpawned = false
 
     #spawnTimer = 0
     #outOfBoundTimer = 0
@@ -42,13 +43,11 @@ export class Game extends Scene
         this.#drawPad = new Drawpad(this)
         this.#player = new Player(this, width / 2, height + 30, 'basic_turret', { stateManager: this.#stateManager, drawPad: this.#drawPad }).withBarrier()
 
-        this.scene.launch('GameUI', { stateManager: this.#stateManager })
+        this.scene.launch('GameUI', { stateManager: this.#stateManager, enemyManager: this.#enemyManager })
 
-        // Initialize DrawPad
         this.#drawPad
             .setPosition(width / 2, height - (128 * 2))
             .setSize(300, 300)
-
         this.#stateManager.setRoundState({
             remainingSec: this.#stateManager.roundState().interval
         })
@@ -67,6 +66,7 @@ export class Game extends Scene
         bg.displayWidth = width * 1.2
 
         this.#eventListeners()
+        this.#stateManager.setGameState(this.#stateManager.GameStates.GAME_BEGIN)
     }
 
     update (time, delta) {
@@ -84,19 +84,24 @@ export class Game extends Scene
         // Round raise difficulty
         // Spawn more enemies per tick (+3)
         // Lower spawn interval (-1s)
-        if (this.#stateManager.roundState.remainingSec <= 0 && this.#enemyManager.isEnemyListEmpty()) {
-            this.#stateManager.setGameState(this.#stateManager.GameStates.ROUND_END)
+        if (this.#stateManager.roundState().remainingSec <= 0) {
 
-            this.#stateManager.updateEnemyState({
-                spawnPerTick: this.#stateManager.enemyState().spawnPerTick + 3,
-                spawnInterval: this.#stateManager.enemyState().spawnInterval - 1000,
-            })
+            if (this.#enemyManager.isWaveCleared() && this.#isEnemySpawned) {
+                this.#stateManager.setGameState(this.#stateManager.GameStates.ROUND_END)
 
-            this.#stateManager.setRoundState({
-                wave: this.#stateManager.roundState().wave++,
-                interval: this.#stateManager.roundState().interval + 5000,
-                remainingSec: this.#stateManager.roundState().interval + 5000,
-            })
+                this.#stateManager.updateEnemyState({
+                    spawnPerTick: this.#stateManager.enemyState().spawnPerTick + 3,
+                    spawnInterval: this.#stateManager.enemyState().spawnInterval - 1000,
+                })
+
+                this.#stateManager.setRoundState({
+                    wave: this.#stateManager.roundState().wave++,
+                    interval: this.#stateManager.roundState().interval + 5000,
+                    remainingSec: this.#stateManager.roundState().interval + 5000,
+                })
+            }
+
+            return
         }
 
         // Enemy Spawner timer
@@ -107,19 +112,22 @@ export class Game extends Scene
                 .spawnEnemiesPerTime(this.#stateManager.enemyState().spawnPerTick)
 
             this.#spawnTimer = 0
+            this.#isEnemySpawned = true
         }
 
         // Out of boundss checker
         this.#outOfBoundTimer += delta
         if (this.#outOfBoundTimer > this.#outOfBoundInternal) {
-            this.#enemyManager
-                .outOfBounds(() => {
+            this.#enemyManager.enemyOutOrDead({
+                enemyOut: (enemy) => {
                     this.#stateManager.updateEnemyState({
                         entry: this.#stateManager.enemyState().entry++
                     })
+                },
+                enemyDead: (enemy) => {
 
-                    this.events.emit('game-state_enemy-passed')
-                })
+                },
+            })
             this.#outOfBoundTimer = 0
         }
 
@@ -143,7 +151,7 @@ export class Game extends Scene
                 remainingSec: (this.#stateManager.roundState().remainingSec - Math.round(seconds))
             })
         }
-        
+
         this.events.emit('game-trigger_update', { time, delta })
     }
 

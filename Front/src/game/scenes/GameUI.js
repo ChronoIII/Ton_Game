@@ -3,6 +3,8 @@ import { Scene } from "phaser";
 export class GameUI extends Scene
 {
     #stateManager
+    #enemyManager
+
     #progress = {
         background: null,
         bar: null,
@@ -10,7 +12,7 @@ export class GameUI extends Scene
         posY: 0,
     }
 
-    #displayWaveTrigger = false
+    #uiContainer = {}
 
     constructor() {
         super('GameUI')
@@ -18,36 +20,67 @@ export class GameUI extends Scene
 
     init(data) {
         this.#stateManager = data.stateManager
+        this.#enemyManager = data.enemyManager
     }
 
     create() {
-        this.#displayInvasionProgressBar()
-        // this.#showWaveLevelText("Survive")
+        this.#displayDrawpadButton()
 
-        this.#coinDisplay()
-        this.#intervalDisplay()
+        this.#displayCoinText('MAX')
+        this.#displayRoundTimeCounter('MAX')
+        this.#displayInvasionProgressBar(0.01)
+
+        this.game.scene.getScene('Game').events.on('[stateManager]game-status_game-update', gameState => {
+            switch (gameState) {
+                case this.#stateManager.GameStates.GAME_BEGIN:
+                    this.#showWaveLevelText('Survive')
+                    break
+                case this.#stateManager.GameStates.ROUND_END:
+                    this.#showWaveEndingText('Wave Cleared')
+                    break
+            }
+        })
+
+        this.game.scene.getScene('Game').events.on('[stateManager]game-status_round-update', (roundState) => {
+            this.#displayRoundTimeCounter(Math.round(roundState.remainingSec * 0.001))
+        })
+
+        this.game.scene.getScene('Game').events.on('[stateManager]game-status_player-update', (playerState) => {
+            this.#displayCoinText(Math.round(playerState.coin))
+        })
+
+        this.game.scene.getScene('Game').events.on('[stateManager]game-enemy-update', (enemyState) => {
+            let progressInvasion = enemyState.maxEntry / enemyState.entry
+
+            this.#displayInvasionProgressBar(progressInvasion.toFixed(2))
+        })
     }
 
-    update() {
-        if ([this.#stateManager.GameStates.GAME_BEGIN, this.#stateManager.GameStates.ROUND_END].includes(this.#stateManager.currentGameState()) && !this.#displayWaveTrigger) {
-            this.#displayWaveTrigger = true
-            this.#showWaveLevelText("Survive")
-        }
-    }
-
-    #displayInvasionProgressBar() {
+    #displayInvasionProgressBar(progress) {
         let height = this.cameras.main.height
         let width = this.cameras.main.width
 
-        this.#progress.posX = width - 10
-        this.#progress.posY = (height / 2) + 150
+        if (!Object.hasOwn(this.#uiContainer, 'progress_invasion')) {
+            this.#progress.posX = width - 10
+            this.#progress.posY = (height / 2) + 150
 
-        this.#progress.background = this.add.rectangle(this.#progress.posX, this.#progress.posY, 10, 300, 0xFFFFFF, 1)
-            .setOrigin(0.5, 1)
-        this.#progress.bar = this.add.rectangle(this.#progress.posX, this.#progress.posY, 10, 300 * 0.01, 0xFF0000, 1)
-            .setOrigin(0.5, 1)
+            this.#uiContainer.progress_invasion = {}
 
-        // Drawpad Button
+            this.#uiContainer.progress_invasion.background = this.add.rectangle(this.#progress.posX, this.#progress.posY, 10, 300, 0xFFFFFF, 1)
+                .setOrigin(0.5, 1)
+            this.#uiContainer.progress_invasion.bar = this.add.rectangle(this.#progress.posX, this.#progress.posY, 10, 300 * 0.01, 0xFF0000, 1)
+                .setOrigin(0.5, 1)
+        }
+
+        this.#uiContainer.progress_invasion.bar.destroy()
+        this.#uiContainer.progress_invasion.bar = this.add.rectangle(this.#progress.posX, this.#progress.posY, 10, 300 * progress, 0xFF0000, 1)
+            .setOrigin(0.5, 1)
+    }
+
+    #displayDrawpadButton() {
+        let height = this.cameras.main.height
+        let width = this.cameras.main.width
+
         let squareSize = 60
         this.add.rectangle(width - ((squareSize / 2) + 10), height - ((squareSize / 2) + 8), squareSize + 5, squareSize, 0xFF0000, 0.7)
             .setInteractive()
@@ -60,27 +93,34 @@ export class GameUI extends Scene
             fontFamily: 'Verdana',
             letterSpacing: 3,
         }).setOrigin(0.5).setDepth(100)
+    }
 
-        this.game.scene.getScene('Game').events.on('game-state_enemy-passed', () => {
-            let enemyState = this.#stateManager.enemyState()
-            let invasionProgress = enemyState.maxEntry / enemyState.entry
+    #displayCoinText(coin) {
+        let labelPosX = 10
+        let labelPosY = 20
 
-            this.#progress.bar.destroy()
-            this.#progress.bar = this.add.rectangle(this.#progress.posX, this.#progress.posY, 10, 300 * invasionProgress, 0xFF0000, 1)
-                .setOrigin(0.5, 1)
+        if (!Object.hasOwn(this.#uiContainer, 'coin_text')) {
+            this.#uiContainer.coin_text = this.add.text(labelPosX, labelPosY, coin, {
+                color: '#fff',
+                font: '400 20px arial',
+            }).setOrigin(0, 0.5)
+        }
 
-            this.tweens.add({
-                targets: [this.#progress.bar, this.#progress.box],
-                alpha: 0,
-                x: {
-                    from: this.#progress.posX + 5,
-                    to: this.#progress.posX - 5,
-                },
-                duration: 100,
-                repeat: -1,
-                yoyo: true,
-            })
-        })
+        this.#uiContainer.coin_text.setText(coin)
+    }
+
+    #displayRoundTimeCounter(remainingSec) {
+        let labelPosX = this.cameras.main.width - 10
+        let labelPosY = 20
+
+        if (!Object.hasOwn(this.#uiContainer, 'round_time_text')) {
+            this.#uiContainer.round_time_text = this.add.text(labelPosX, labelPosY, remainingSec, {
+                color: '#fff',
+                font: '400 20px arial',
+            }).setOrigin(1, 0.5)
+        }
+
+        this.#uiContainer.round_time_text.setText(remainingSec)
     }
 
     #showWaveLevelText(text) {
@@ -88,11 +128,13 @@ export class GameUI extends Scene
         let width = this.cameras.main.width
 
         let objectiveLabelText = this.add.text(width / 2, height * 0.2, 'Objective updated:', {
-            font: '600 19px arial',
+            font: '600 20px arial',
             fontFamily: 'Verdana',
             letterSpacing: 1,
             color: '#FFF',
             align: 'center',
+            stroke: '#333',
+            strokeThickness: 5,
         }).setOrigin(0.5).setDepth(100)
 
         let objectiveValueText = this.add.text(width / 2, height * 0.24, text, {
@@ -103,58 +145,46 @@ export class GameUI extends Scene
             align: 'center',
         }).setOrigin(0.5).setDepth(100)
 
-        setTimeout(() => {
-            let tween = this.tweens.add({
-                targets: [objectiveLabelText, objectiveValueText],
-                alpha: 0,
-                duration: 2000,
-                repeat: 0,
-                onComplete: () => {
-                    this.#stateManager.setGameState(this.#stateManager.GameStates.ROUND_BEGIN)
+        this.tweens.add({
+            targets: [objectiveLabelText, objectiveValueText],
+            alpha: 0,
+            delay: 3000,
+            duration: 2000,
+            repeat: 0,
+            onComplete: () => {
+                this.#stateManager.setGameState(this.#stateManager.GameStates.ROUND_BEGIN)
 
-                    objectiveLabelText.destroy()
-                    objectiveValueText.destroy()
-
-                    this.#displayWaveTrigger = false
-                    
-                    tween.destroy()
-                }
-            })
-        }, 3000)
-    }
-
-    #coinDisplay() {
-        let labelPosX = 10
-        let labelPosY = 20
-
-        let coinLabelDisplay = this.add.text(labelPosX, labelPosY, '0', {
-            color: '#fff',
-            font: '400 20px arial',
-        }).setOrigin(0, 0.5)
-
-        // Player State Update (coins, commands, upgrades)
-        this.game.scene.getScene('Game').events.on('[stateManager]game-status_player-update', () => {
-            let playerCurrentState = this.#stateManager.playerState()
-
-            coinLabelDisplay.setText(playerCurrentState.coin)
+                objectiveLabelText.destroy()
+                objectiveValueText.destroy()
+            },
         })
     }
 
-    #intervalDisplay() {
-        let labelPosX = this.cameras.main.width - 10
-        let labelPosY = 20
+    #showWaveEndingText(text) {
+        let height = this.cameras.main.height
+        let width = this.cameras.main.width
 
-        let roundIntervalCounter = this.add.text(labelPosX, labelPosY, this.#stateManager.roundState().remainingSec * 0.001, {
-            color: '#fff',
-            font: '400 20px arial',
-        }).setOrigin(1, 0.5)
+        let endingLabelText = this.add.text(width / 2, height * 0.22, text, {
+            font: '600 20px arial',
+            fontFamily: 'Verdana',
+            letterSpacing: 1,
+            color: '#FFF',
+            align: 'center',
+            stroke: '#333',
+            strokeThickness: 5,
+        }).setOrigin(0.5).setDepth(100)
 
-        // Round State Update (interval, wave level, remainingSec)
-        this.game.scene.getScene('Game').events.on('[stateManager]game-status_round-update', () => {
-            let roundCurrentState = this.#stateManager.roundState()
+        this.tweens.add({
+            targets: [endingLabelText],
+            alpha: 0,
+            delay: 3000,
+            duration: 2000,
+            repeat: 0,
+            onComplete: () => {
+                this.#stateManager.setGameState(this.#stateManager.GameStates.ROUND_BEGIN)
 
-            roundIntervalCounter.setText(Math.floor(roundCurrentState.remainingSec * 0.001))
+                endingLabelText.destroy()
+            },
         })
     }
-
 }
