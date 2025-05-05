@@ -143,6 +143,8 @@ export class GameUI extends Scene
             letterSpacing: 2,
             color: '#F00',
             align: 'center',
+            stroke: '#333',
+            strokeThickness: 5,
         }).setOrigin(0.5).setDepth(100)
 
         this.tweens.add({
@@ -165,7 +167,7 @@ export class GameUI extends Scene
         let width = this.cameras.main.width
 
         let endingLabelText = this.add.text(width / 2, height * 0.22, text, {
-            font: '600 20px arial',
+            font: '600 25px arial',
             fontFamily: 'Verdana',
             letterSpacing: 1,
             color: '#FFF',
@@ -177,7 +179,7 @@ export class GameUI extends Scene
         this.tweens.add({
             targets: [endingLabelText],
             alpha: 0,
-            delay: 3000,
+            delay: 5000,
             duration: 2000,
             repeat: 0,
             onComplete: () => {

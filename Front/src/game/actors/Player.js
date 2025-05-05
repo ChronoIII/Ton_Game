@@ -17,7 +17,7 @@ export default class Player extends Phaser.GameObjects.Sprite
         this.#y = y
         this.#spawn()
 
-        this.#scene.events.on('[player]game-trigger_update', () => {
+        this.#scene.events.on('game-trigger_early_update', () => {
             // Reset recoil knockback (player)
             if (this.y < this.getData('posY')) {
                 this.body.velocity.y = 0

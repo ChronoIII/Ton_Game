@@ -29,8 +29,8 @@ export default class StateManager
     }
 
     #roundState = {
-        remainingSec: 5000,
-        interval: 5000,
+        remainingSec: 30000,
+        interval: 30000,
         wave: 1,
     }
 

@@ -25,12 +25,13 @@ export class MainMenu extends Scene
     }
 
     #displayTitle(titlePosX, titlePosY) {
-        let title = this.add.text(titlePosX, titlePosY, "1st Battalion\nCannon", {
-            fontSize: 38,
+        let title = this.add.text(titlePosX, titlePosY, "Cannon\nMayhem", {
+            fontSize: 45,
             fontFamily: 'Arial Black',
             align: 'center',
             color: '#fff',
-            stroke: '#000000',
+            letterSpacing: 5,
+            stroke: '#333',
             strokeThickness: 8,
         }).setOrigin(0.5).setDepth(100)
 
@@ -40,7 +41,6 @@ export class MainMenu extends Scene
                 from: titlePosY + 5,
                 to: titlePosY - 5,
             },
-            // ease: 'Back.easeInOut',
             repeat: -1,
             duration: 1000,
             yoyo: true,
@@ -48,60 +48,60 @@ export class MainMenu extends Scene
     }
 
     #displayMenuButton() {
-        // let start_bg = this.add.graphics()
-        //     .fillStyle(0x5555AA, 0.9)
-        //     .fillRoundedRect(30, this.#canvasHeight * 0.775, 160, 60)
-        //     .setDepth(80)
-        let start_bg2 = this.add.graphics()
-            .fillStyle(0x5555AA, 1)
-            .fillRoundedRect(30, this.#canvasHeight * 0.775, 160, 55)
+        // Start Button
+        let startButtonConfig = {
+            width: 180,
+            height: 60,
+            x: 30,
+            y: this.#canvasHeight * 0.8,
+        }
+        this.add.graphics()
+            .fillStyle(0xF97068, 1)
+            .fillRoundedRect(startButtonConfig.x, startButtonConfig.y, startButtonConfig.width, startButtonConfig.height)
             .setDepth(80)
-        let start_label = this.add.text(110, this.#canvasHeight * 0.8, 'Lets roll', {
+        this.add.text(startButtonConfig.width / 2 + startButtonConfig.x, startButtonConfig.y + startButtonConfig.height / 2, 'Lets roll', {
                 fontSize: 25,
                 fontFamily: 'Arial Black',
                 color: '#fff',
-                stroke: '#000000',
+                stroke: '#212738',
                 strokeThickness: 8,
             })
             .setDepth(100)
             .setOrigin(0.5)
             .setInteractive()
             .on('pointerdown', () => {
-                start_label.setPosition(110, this.#canvasHeight * 0.805)
-                // start_bg2.setPosition(30, this.#canvasHeight * 0.78)
+
             })
             .on('pointerup', () => {
-                start_label.setPosition(110, this.#canvasHeight * 0.805)
-                // start_bg2.setPosition(30, this.#canvasHeight * 0.78)
-
                 this.scene.start('Game')
             })
 
-        // let upgrade_bg = this.add.graphics()
-        //     .fillStyle(0x5555AA, 0.9)
-        //     .fillRoundedRect(30, this.#canvasHeight * 0.895, 160, 60)
-        //     .setDepth(80)
-        let upgrade_bg2 = this.add.graphics()
-            .fillStyle(0x5555AA, 1)
-            .fillRoundedRect(30, this.#canvasHeight * 0.895, 160, 55)
+        // Upgrade Button
+        let upgradeButtonConfig = {
+            width: 180,
+            height: 60,
+            x: 30,
+            y: this.#canvasHeight * 0.895,
+        }
+        this.add.graphics()
+            .fillStyle(0xF97068, 1)
+            .fillRoundedRect(upgradeButtonConfig.x, upgradeButtonConfig.y, upgradeButtonConfig.width, upgradeButtonConfig.height)
             .setDepth(80)
-        let upgrade_label = this.add.text(110, this.#canvasHeight * 0.92, 'Upgrades', {
+        this.add.text(upgradeButtonConfig.width / 2 + upgradeButtonConfig.x, upgradeButtonConfig.y + upgradeButtonConfig.height / 2, 'Upgrades', {
                 fontSize: 25,
                 fontFamily: 'Arial Black',
                 color: '#fff',
-                stroke: '#000000',
+                stroke: '#212738',
                 strokeThickness: 8,
             })
             .setDepth(100)
             .setOrigin(0.5)
             .setInteractive()
             .on('pointerdown', () => {
-                upgrade_label.setPosition(110, this.#canvasHeight * 0.925)
-                // upgrade_bg2.setPosition(30, this.#canvasHeight * 0.925)
+
             })
             .on('pointerup', () => {
-                upgrade_label.setPosition(110, this.#canvasHeight * 0.92)
-                // upgrade_bg2.setPosition(30, this.#canvasHeight * 0.92)
+
             })
     }
 }

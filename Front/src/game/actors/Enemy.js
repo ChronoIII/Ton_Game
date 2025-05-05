@@ -2,16 +2,20 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite
 {
     #scene
     #texture
-    #moveSpeed = 100
-    #hit = 3
-    #points = 10
+    #moveSpeed
+    #hit
+    #points
 
-    constructor(scene, x, y, texture) {
+    constructor(scene, x, y, texture, config = null) {
         super(scene, x, y, texture)
 
         this.#scene = scene
         this.#texture = texture
         this.#spawn()
+
+        this.#moveSpeed = config.moveSpeed ?? 100
+        this.#hit = config.hit ?? 100
+        this.#points = config.points ?? 10
     }
 
     damage(gameObject) {
@@ -80,8 +84,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite
     #drop() {
         let coinDrop
 
-        let minimumCoinDrop = 10
-        let maximumCoinDrop = 30
+        let minimumCoinDrop = this.#points
+        let maximumCoinDrop = this.#points * 5
         
         coinDrop = minimumCoinDrop
         if (Math.random() >= 0.8) {

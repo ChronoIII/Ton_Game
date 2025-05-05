@@ -17,17 +17,12 @@ export class Game extends Scene
     #isEnemySpawned = false
 
     #spawnTimer = 0
-    #outOfBoundTimer = 0
     #spawnInterval = 5000
-    #outOfBoundInternal = 1000
-    #roundTimer
 
     #utilities = []
 
     #objectWithActions = {}
 
-    #test = 0
-    
     constructor ()
     {
         super('Game');
@@ -72,7 +67,7 @@ export class Game extends Scene
     update (time, delta) {
         let seconds = time * 0.001
 
-        this.events.emit('[player]game-trigger_update', { time, delta })
+        this.events.emit('game-trigger_early_update', { time, delta, seconds })
 
         if (this.#stateManager.currentGameState() != this.#stateManager.GameStates.ROUND_BEGIN) {
             // Starting game will spawn ememies immediately
@@ -91,13 +86,18 @@ export class Game extends Scene
 
                 this.#stateManager.updateEnemyState({
                     spawnPerTick: this.#stateManager.enemyState().spawnPerTick + 3,
-                    spawnInterval: this.#stateManager.enemyState().spawnInterval - 1000,
+                    spawnInterval: this.#stateManager.enemyState().spawnInterval - 100,
                 })
 
                 this.#stateManager.setRoundState({
                     wave: this.#stateManager.roundState().wave++,
-                    interval: this.#stateManager.roundState().interval + 5000,
-                    remainingSec: this.#stateManager.roundState().interval + 5000,
+                    interval: this.#stateManager.roundState().interval + 10000,
+                    remainingSec: this.#stateManager.roundState().interval + 10000,
+                })
+
+                this.#enemyManager.updateStats('hopp', {
+                    moveSpeed: this.#enemyManager.stats('hopp').moveSpeed + 50,
+                    hit: this.#enemyManager.stats('hopp').hit + 0.5,
                 })
             }
 
@@ -113,22 +113,6 @@ export class Game extends Scene
 
             this.#spawnTimer = 0
             this.#isEnemySpawned = true
-        }
-
-        // Out of boundss checker
-        this.#outOfBoundTimer += delta
-        if (this.#outOfBoundTimer > this.#outOfBoundInternal) {
-            this.#enemyManager.enemyOutOrDead({
-                enemyOut: (enemy) => {
-                    this.#stateManager.updateEnemyState({
-                        entry: this.#stateManager.enemyState().entry++
-                    })
-                },
-                enemyDead: (enemy) => {
-
-                },
-            })
-            this.#outOfBoundTimer = 0
         }
 
         // Run Phaser Action methods for command mechanics
@@ -148,11 +132,11 @@ export class Game extends Scene
         // Updates remaining seconds every wave level
         if (this.#stateManager.roundState().remainingSec > 0) {
             this.#stateManager.setRoundState({
-                remainingSec: (this.#stateManager.roundState().remainingSec - Math.round(seconds))
+                remainingSec: (this.#stateManager.roundState().remainingSec - seconds)
             })
         }
 
-        this.events.emit('game-trigger_update', { time, delta })
+        this.events.emit('game-trigger_late_update', { time, delta, seconds })
     }
 
     #eventListeners() {
